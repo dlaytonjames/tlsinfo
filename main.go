@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -69,29 +68,11 @@ func main() {
 		os.Exit(1)
 	}
 	// check TLS connection
-	var cipher, tlsVersion string
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
 		err = errors.New("TLS connection failed")
 		fmt.Println(err)
 		os.Exit(1)
-	}
-
-	// translate cipher to readable string
-	switch tlsConnState.CipherSuite {
-	case tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
-		cipher = "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"
-	case tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
-		cipher = "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
-	case tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
-		cipher = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256"
-	case tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:
-		cipher = "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384"
-	}
-	// translate version to readable string
-	switch tlsConnState.Version {
-	case tls.VersionTLS12:
-		tlsVersion = "TLSv1.2"
 	}
 
 	// Check for stapled OCSP response
@@ -107,12 +88,14 @@ func main() {
 		fmt.Println("OCSP status: ", ocsp.Status)
 	}
 
-	// parse server cert data
+	// get cipher name
+	cipher := common.GetCipherName(tlsConnState.CipherSuite)
+	// get tls version name
+	tlsVersion := common.GetTlsName(tlsConnState.Version)
+	// get server cert subject name
 	peerCerts := tlsConnState.PeerCertificates
 	srvCert := peerCerts[0]
-	CN := srvCert.Subject.CommonName
-	O := srvCert.Subject.Organization
-	C := srvCert.Subject.Country
+	subjectDN := common.GetSubjectDn(srvCert)
 
 	// print out data
 	fmt.Println("\nResponse time: ", reqTime)
@@ -122,9 +105,9 @@ func main() {
 	fmt.Println("TLS cipher: ", cipher)
 	fmt.Println("Server certificate:")
 	fmt.Println("Subject:")
-	fmt.Printf("CN=%s\n", CN)
-	fmt.Printf("O=%s\n", O[0])
-	fmt.Printf("C=%s\n", C[0])
+	fmt.Printf("CN=%s\n", subjectDN.CN)
+	fmt.Printf("O=%s\n", subjectDN.O)
+	fmt.Printf("C=%s\n", subjectDN.C)
 	sanDns := srvCert.DNSNames
 	for cnt, dnsName := range sanDns {
 		cnt++
