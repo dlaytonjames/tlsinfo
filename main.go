@@ -104,10 +104,10 @@ func main() {
 	fmt.Println("TLS version: ", tlsVersion)
 	fmt.Println("TLS cipher: ", cipher)
 	fmt.Println("Server certificate:")
-	fmt.Println("Subject:")
-	fmt.Printf("CN=%s\n", subjectDN.CN)
-	fmt.Printf("O=%s\n", subjectDN.O)
-	fmt.Printf("C=%s\n", subjectDN.C)
+	fmt.Println("  Subject DN:")
+	fmt.Printf("      CN=%s\n", subjectDN.CN)
+	fmt.Printf("       O=%s\n", subjectDN.O)
+	fmt.Printf("       C=%s\n", subjectDN.C)
 	sanDns := srvCert.DNSNames
 	for cnt, dnsName := range sanDns {
 		cnt++
