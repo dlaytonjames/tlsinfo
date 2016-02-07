@@ -10,15 +10,20 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"golang.org/x/crypto/ocsp"
 )
 
 type Args struct {
 	TrustList, Url string
 }
 
+const VERSION = "1.0-SNAPSHOT"
+
 func main() {
+	// start app timer
 	appTime := time.Now()
-	fmt.Println("Started...")
+	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
 
 	// flag setup
 	var (
@@ -27,7 +32,6 @@ func main() {
 	)
 	flag.Parse()
 	args := Args{*trustList, *url}
-	fmt.Printf("%+v\n", args)
 
 	// read in trust list
 	trustedCerts, err := ioutil.ReadFile(args.TrustList)
@@ -64,6 +68,9 @@ func main() {
 	client := http.Client{Transport: tr}
 	client.Timeout = 5 * time.Second
 
+	fmt.Printf("Connecting to %s\n", args.Url)
+	// start request timer
+	reqTimer := time.Now()
 	// get data
 	resp, err := client.Get(args.Url)
 	if err != nil {
@@ -71,6 +78,9 @@ func main() {
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
+
+	// end request timer
+	reqTime := time.Since(reqTimer)
 
 	// check response
 	if resp.StatusCode != 200 {
@@ -99,27 +109,48 @@ func main() {
 	}
 
 	// Check for stapled OCSP response
-	var stapledOcspResponse bool
+	stapledOcspResponse := false
 	ocspResp := tlsConnState.OCSPResponse
-	if len(ocspResp) < 0 {
-		stapledOcspResponse = false
-	} else {
+	if len(ocspResp) > 0 {
 		stapledOcspResponse = true
-		// TODO: parse OCSP response
+		ocsp, err := ocsp.ParseResponse(ocspResp, nil)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("OCSP status: ", ocsp.Status)
 	}
 
+	// parse server cert data
 	peerCerts := tlsConnState.PeerCertificates
-	for i, cert := range peerCerts {
-		i++
-		fmt.Printf("Cert %d subject: %s\n", i, cert.Subject)
-	}
+	srvCert := peerCerts[0]
+	CN := srvCert.Subject.CommonName
+	O := srvCert.Subject.Organization
+	C := srvCert.Subject.Country
 
+	// print out data
+	fmt.Println("\nResponse time: ", reqTime)
 	fmt.Println("HTTP response status: ", resp.Status)
 	fmt.Println("HTTP protocol: ", resp.Proto)
 	fmt.Println("TLS version: ", tlsVersion)
 	fmt.Println("TLS cipher: ", cipher)
+	fmt.Println("Server certificate:")
+	fmt.Println("Subject:")
+	fmt.Printf("CN=%s\n", CN)
+	fmt.Printf("O=%s\n", O[0])
+	fmt.Printf("C=%s\n", C[0])
+	sanDns := srvCert.DNSNames
+	for cnt, dnsName := range sanDns {
+		cnt++
+		fmt.Printf("[%d] DNSName: %s\n", cnt, dnsName)
+	}
+	sanIPs := srvCert.IPAddresses
+	for cnt, ip := range sanIPs {
+		cnt++
+		fmt.Printf("[%d] IPAddress: %v\n", cnt, ip)
+	}
 	fmt.Printf("Stapled OCSP response: %v\n", stapledOcspResponse)
 
-	// end timer
-	fmt.Println("\nTime since start: ", time.Since(appTime))
+	// end app timer
+	fmt.Println("\nTotal app time: ", time.Since(appTime))
 }
