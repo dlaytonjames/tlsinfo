@@ -7,15 +7,11 @@
 >$ snatchtls -h
 
 ```
-
-Snatch TLS
- version 1.0-SNAPSHOT
-
 Usage of snatchtls:
   -trst string
     	 the filename for the trusted CAs (PEM encoded) (default "trustList.pem")
   -url string
-    	the url used for the connection (default "https://www.apple.com")
+    	the url used for the connection (default "https://www.google.com")
 ```
 ### Run
 >$ snatchtls -trst *{tustList filename}* -url *{connection url}*
@@ -24,9 +20,10 @@ Usage of snatchtls:
 Snatch TLS
  version 1.0-SNAPSHOT
 
-Connecting to https://www.google.com
+  trust list: trustList.pem
+         url: https://www.google.com
 
-Response time:  147.017331ms
+Response time:  128.603108ms
 HTTP response status:  200 OK
 HTTP protocol:  HTTP/1.1
 TLS version:  TLSv1.2
@@ -39,5 +36,5 @@ C=US
 [1] DNSName: www.google.com
 Stapled OCSP response: false
 
-Total app time:  147.682313ms
+Total app time:  129.284101ms
 ```

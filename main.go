@@ -24,7 +24,6 @@ const (
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
 
 	// flag setup
 	var (
@@ -33,6 +32,11 @@ func main() {
 	)
 	flag.Parse()
 	args := Args{*trustList, *url}
+
+	// print out intro and args
+	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
+	fmt.Printf("  trust list: %s\n", args.TrustList)
+	fmt.Printf("         url: %s\n", args.Url)
 
 	// Get trust list
 	trustedCAs, err := common.GetTrustedCAs(args.TrustList)
@@ -47,7 +51,6 @@ func main() {
 	// Get http client
 	client := common.GetHttpClient(tlsConfig)
 
-	fmt.Printf("Connecting to %s\n", args.Url)
 	// start request timer
 	reqTimer := time.Now()
 	// perform http GET request
