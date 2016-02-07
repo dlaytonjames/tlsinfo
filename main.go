@@ -119,6 +119,7 @@ func main() {
 	fmt.Println("TLS version: ", tlsVersion)
 	fmt.Println("TLS cipher: ", cipher)
 	fmt.Printf("Stapled OCSP response: %v\n", stapledOcspResponse)
+
 	// end timer
-	fmt.Println("Time since start: ", time.Since(appTime))
+	fmt.Println("\nTime since start: ", time.Since(appTime))
 }
