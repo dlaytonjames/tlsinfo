@@ -1,4 +1,4 @@
-# Snatch TLS (snatchtls)
+## Snatch TLS (snatchtls)
 
 ### Get, Build and Install
 > $ go get github.com/spazbite187/snatchtls
