@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"time"
 
@@ -17,8 +16,10 @@ type Args struct {
 	TrustList, Url string
 }
 
-// global constants
-const VERSION = "1.0-SNAPSHOT"
+// package constants
+const (
+	VERSION = "1.0-SNAPSHOT"
+)
 
 func main() {
 	// start app timer
@@ -28,7 +29,7 @@ func main() {
 	// flag setup
 	var (
 		trustList = flag.String("trst", "trustList.pem", " the filename for the trusted CAs (PEM encoded)")
-		url       = flag.String("url", "https://www.apple.com", "the url used for the connection")
+		url       = flag.String("url", "https://www.google.com", "the url used for the connection")
 	)
 	flag.Parse()
 	args := Args{*trustList, *url}
@@ -40,40 +41,22 @@ func main() {
 		os.Exit(1)
 	}
 
-	tlsConfig := &tls.Config{}
-	tlsConfig.RootCAs = trustedCAs
+	// Get TLS configuration
+	tlsConfig := common.GetTlsConfig(trustedCAs)
 
-	// ciphers
-	tlsConfig.CipherSuites = []uint16{
-		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	}
-	tlsConfig.MinVersion = tls.VersionTLS12
-	tlsConfig.SessionTicketsDisabled = false
-
-	// http client config
-	tr := &http.Transport{
-		TLSClientConfig:    tlsConfig,
-		DisableCompression: false,
-	}
-	client := http.Client{
-		Transport: tr,
-		Timeout:   5 * time.Second,
-	}
+	// Get http client
+	client := common.GetHttpClient(tlsConfig)
 
 	fmt.Printf("Connecting to %s\n", args.Url)
 	// start request timer
 	reqTimer := time.Now()
-	// get data
+	// perform http GET request
 	resp, err := client.Get(args.Url)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-
 	// end request timer
 	reqTime := time.Since(reqTimer)
 
@@ -82,8 +65,8 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	var cipher string
-	var tlsVersion string
+	// check TLS connection
+	var cipher, tlsVersion string
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
 		err = errors.New("TLS connection failed")
