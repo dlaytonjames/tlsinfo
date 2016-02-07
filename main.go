@@ -2,15 +2,14 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/spazbite187/snatchtls/common"
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -18,6 +17,7 @@ type Args struct {
 	TrustList, Url string
 }
 
+// global constants
 const VERSION = "1.0-SNAPSHOT"
 
 func main() {
@@ -33,22 +33,15 @@ func main() {
 	flag.Parse()
 	args := Args{*trustList, *url}
 
-	// read in trust list
-	trustedCerts, err := ioutil.ReadFile(args.TrustList)
+	// Get trust list
+	trustedCAs, err := common.GetTrustedCAs(args.TrustList)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	// load trust list
-	certPool := x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(trustedCerts) {
-		err = errors.New("Failed to create trusted list of CAs")
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	tlsConfig := &tls.Config{}
-	tlsConfig.RootCAs = certPool
+	tlsConfig.RootCAs = trustedCAs
 
 	// ciphers
 	tlsConfig.CipherSuites = []uint16{
@@ -65,8 +58,10 @@ func main() {
 		TLSClientConfig:    tlsConfig,
 		DisableCompression: false,
 	}
-	client := http.Client{Transport: tr}
-	client.Timeout = 5 * time.Second
+	client := http.Client{
+		Transport: tr,
+		Timeout:   5 * time.Second,
+	}
 
 	fmt.Printf("Connecting to %s\n", args.Url)
 	// start request timer
@@ -90,6 +85,11 @@ func main() {
 	var cipher string
 	var tlsVersion string
 	tlsConnState := resp.TLS
+	if tlsConnState == nil {
+		err = errors.New("TLS connection failed")
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	// translate cipher to readable string
 	switch tlsConnState.CipherSuite {
