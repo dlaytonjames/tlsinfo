@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"math/big"
 	"os"
 	"time"
 
@@ -17,7 +18,7 @@ type Args struct {
 
 // package constants
 const (
-	VERSION = "1.0-SNAPSHOT"
+	VERSION = "1.0.0-SNAPSHOT"
 )
 
 func main() {
@@ -75,19 +76,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Check for stapled OCSP response
-	stapledOcspResponse := false
-	ocspResp := tlsConnState.OCSPResponse
-	if len(ocspResp) > 0 {
-		stapledOcspResponse = true
-		ocsp, err := ocsp.ParseResponse(ocspResp, nil)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println("OCSP status: ", ocsp.Status)
-	}
-
 	// get cipher name
 	cipher := common.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
@@ -118,7 +106,40 @@ func main() {
 		cnt++
 		fmt.Printf("[%d] IPAddress: %v\n", cnt, ip)
 	}
+	// Check for stapled OCSP response
+	var status string
+	var serialNum *big.Int
+	var thisUpdate time.Time
+	var nextUpdate time.Time
+	var stapledOcspResponse bool
+	rawOcspResp := tlsConnState.OCSPResponse
+	if len(rawOcspResp) > 0 {
+		ocspResp, err := ocsp.ParseResponse(rawOcspResp, nil)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			stapledOcspResponse = true
+			serialNum = ocspResp.SerialNumber
+			thisUpdate = ocspResp.ThisUpdate
+			nextUpdate = ocspResp.NextUpdate
+			switch ocspResp.Status {
+			case ocsp.Good:
+				status = "Good"
+			case ocsp.Revoked:
+				status = "Revoked"
+			case ocsp.Unknown:
+				status = "Unknown"
+			}
+		}
+	}
 	fmt.Printf("Stapled OCSP response: %v\n", stapledOcspResponse)
+	if stapledOcspResponse {
+		fmt.Println("\nOCSP response details:")
+		fmt.Println("       status:", status)
+		fmt.Printf("  cert serial: %d\n", serialNum)
+		fmt.Println("  this update:", thisUpdate)
+		fmt.Println("  next update:", nextUpdate)
+	}
 
 	// end app timer
 	fmt.Println("\nTotal app time: ", time.Since(appTime))
