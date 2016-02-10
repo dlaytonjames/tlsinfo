@@ -1,9 +1,11 @@
 languange: go
 
 go:
- - 1.5.3
+ - 1.5
 
-sudo: false
+install:
+  - go get -t -v ./...
+
 script:
   - go test -v ./...
-#  - go build -v
+  - go build -v
