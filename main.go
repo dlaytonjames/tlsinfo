@@ -8,7 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/spazbite187/snatchtls/common"
+	"github.com/spazbite187/snatchtls/certs"
+	"github.com/spazbite187/snatchtls/net"
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -39,17 +40,17 @@ func main() {
 	fmt.Printf("         url: %s\n", args.Url)
 
 	// Get trust list
-	trustedCAs, err := common.GetTrustedCAs(args.TrustList)
+	trustedCAs, err := certs.GetTrustedCAs(args.TrustList)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	// Get TLS configuration
-	tlsConfig := common.GetTlsConfig(trustedCAs)
+	tlsConfig := net.GetTlsConfig(trustedCAs)
 
 	// Get http client
-	client := common.GetHttpClient(tlsConfig)
+	client := net.GetHttpClient(tlsConfig)
 
 	// start request timer
 	reqTimer := time.Now()
@@ -77,13 +78,13 @@ func main() {
 	}
 
 	// get cipher name
-	cipher := common.GetCipherName(tlsConnState.CipherSuite)
+	cipher := net.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
-	tlsVersion := common.GetTlsName(tlsConnState.Version)
+	tlsVersion := net.GetTlsName(tlsConnState.Version)
 	// get server cert subject name
 	peerCerts := tlsConnState.PeerCertificates
 	srvCert := peerCerts[0]
-	subjectDN := common.GetSubjectDn(srvCert)
+	subjectDN := certs.GetSubjectDn(srvCert)
 
 	// print out data
 	fmt.Println("\nResponse time: ", reqTime)
