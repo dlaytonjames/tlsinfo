@@ -84,7 +84,15 @@ func main() {
 	// get server cert subject name
 	peerCerts := tlsConnState.PeerCertificates
 	srvCert := peerCerts[0]
-	subjectDN := certs.GetSubjectDn(srvCert)
+	san := certs.SubjectAltName{
+		DNSName: srvCert.DNSNames,
+		IPAddr:  srvCert.IPAddresses,
+	}
+	serverCert := certs.Cert{
+		IssuerDN:  certs.GetIssuerDN(srvCert),
+		SubjectDN: certs.GetSubjectDN(srvCert),
+		SAN:       san,
+	}
 
 	// print out data
 	fmt.Println("\nResponse time: ", reqTime)
@@ -93,20 +101,7 @@ func main() {
 	fmt.Println("TLS version: ", tlsVersion)
 	fmt.Println("TLS cipher: ", cipher)
 	fmt.Println("Server certificate:")
-	fmt.Println("  Subject DN:")
-	fmt.Printf("      CN=%s\n", subjectDN.CN)
-	fmt.Printf("       O=%s\n", subjectDN.O)
-	fmt.Printf("       C=%s\n", subjectDN.C)
-	sanDns := srvCert.DNSNames
-	for cnt, dnsName := range sanDns {
-		cnt++
-		fmt.Printf("[%d] DNSName: %s\n", cnt, dnsName)
-	}
-	sanIPs := srvCert.IPAddresses
-	for cnt, ip := range sanIPs {
-		cnt++
-		fmt.Printf("[%d] IPAddress: %v\n", cnt, ip)
-	}
+	fmt.Println(serverCert)
 	// Check for stapled OCSP response
 	var status string
 	var serialNum *big.Int

@@ -4,7 +4,7 @@
 > $ go get github.com/spazbite187/snatchtls
 
 ### Run
->$ snatchtls -trst *{tustList filename}* -url *{connection url}*
+>$ snatchtls -t *{tustList filename}* -u *{connection url}*
 
 ```
 Snatch TLS
@@ -34,8 +34,8 @@ Total app time:  129.284101ms
 
 ```
 Usage of snatchtls:
-  -trst string
+  -t string
     	 the filename for the trusted CAs (PEM encoded) (default "trustList.pem")
-  -url string
+  -u string
     	the url used for the connection (default "https://www.google.com")
 ```
