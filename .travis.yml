@@ -1,11 +1,8 @@
 language: go
 
 go:
-  - 1.5
-  - tip
+  - 1.5.3
 
 script:
-#  - go version
-#  - export GOPATH=`pwd`
   - go test -v ./...
   - go build -v
