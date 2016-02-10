@@ -2,10 +2,10 @@ languange: go
 
 go:
   - 1.5
-
-before_install:
-  - export GOPATH=`pwd`
+  - tip
 
 script:
+  - go version
+  - export GOPATH=`pwd`
   - go test -v ./...
   - go build -v
