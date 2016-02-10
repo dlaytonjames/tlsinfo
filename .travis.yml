@@ -1,12 +1,10 @@
 languange: go
 
 go:
- - 1.5
+  - 1.5
 
 before_install:
-  - pwd
-  - ls -l
-  - go version
+  - export GOPATH=`pwd`
 
 install:
   - go get -t -v ./...
