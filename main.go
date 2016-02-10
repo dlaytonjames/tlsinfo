@@ -28,8 +28,8 @@ func main() {
 
 	// flag setup
 	var (
-		trustList = flag.String("trst", "trustList.pem", " the filename for the trusted CAs (PEM encoded)")
-		url       = flag.String("url", "https://www.google.com", "the url used for the connection")
+		trustList = flag.String("t", "trustList.pem", " the filename for the trusted CAs (PEM encoded)")
+		url       = flag.String("u", "https://www.google.com", "the url used for the connection")
 	)
 	flag.Parse()
 	args := Args{*trustList, *url}
