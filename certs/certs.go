@@ -26,16 +26,6 @@ func (cert Cert) String() string {
 	s = s + fmt.Sprintf("	  DNSNames: %s\n", cert.SAN.DNSName)
 	s = s + fmt.Sprintf("	    IPAddr: %s\n", cert.SAN.IPAddr)
 
-	//for i, dnsName := range sanDns {
-	//	i++
-	//	fmt.Printf("	DNSName[%d]: %s\n", i, dnsName)
-	//}
-	//sanIPs := srvCert.IPAddresses
-	//for i, ip := range sanIPs {
-	//	i++
-	//	fmt.Printf("	IPAddress[%d]: %v\n", i, ip)
-	//}
-
 	return s
 }
 
