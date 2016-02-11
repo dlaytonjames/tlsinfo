@@ -1,4 +1,5 @@
 ## Snatch TLS (snatchtls)
+[![Build Status](https://travis-ci.com/spazbite187/snatchtls.svg?token=NMbRMJwwFjLPk9aX48wh&branch=master)](https://travis-ci.com/spazbite187/snatchtls)
 
 ### Get, Build and Install
 > $ go get github.com/spazbite187/snatchtls
