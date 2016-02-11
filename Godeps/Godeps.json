@@ -1,0 +1,13 @@
+{
+	"ImportPath": "github.com/spazbite187/snatchtls",
+	"GoVersion": "go1.5",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "golang.org/x/crypto/ocsp",
+			"Rev": "1f22c0103821b9390939b6776727195525381532"
+		}
+	]
+}

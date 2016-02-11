@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/spazbite187/snatchtls/Godeps/_workspace/src/golang.org/x/crypto/ocsp"
 	"github.com/spazbite187/snatchtls/certs"
 	"github.com/spazbite187/snatchtls/net"
-	"golang.org/x/crypto/ocsp"
 )
 
 type Args struct {
