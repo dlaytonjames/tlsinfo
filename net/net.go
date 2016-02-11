@@ -3,14 +3,36 @@ package net
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/spazbite187/snatchtls/certs"
 )
 
 const (
 	TIMEOUT = 10 * time.Second
 )
 
+type ConnInfo struct {
+	ResponseTime                      time.Duration
+	Status, Proto, TlsVersion, Cipher string
+	SrvCert                           certs.CertInfo
+	StapledOCSP                       bool
+}
+
+func (connInfo ConnInfo) String() string {
+	s := fmt.Sprintf("Response time: %s\n", connInfo.ResponseTime)
+	s = s + fmt.Sprintf("  HTTP response status: %s\n", connInfo.Status)
+	s = s + fmt.Sprintf("  HTTP protocol: %s\n", connInfo.Proto)
+	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TlsVersion)
+	s = s + fmt.Sprintf("  TLS cipher: %s\n", connInfo.Cipher)
+	s = s + fmt.Sprintf("  Stapled OCSP response: %v\n", connInfo.StapledOCSP)
+
+	return s
+}
+
+// Get configured HTTP client struct.
 func GetHttpClient(tlsConfig *tls.Config) (client http.Client) {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
@@ -25,6 +47,7 @@ func GetHttpClient(tlsConfig *tls.Config) (client http.Client) {
 	return
 }
 
+// Get configured TLS struct.
 func GetTlsConfig(certPool *x509.CertPool) (tlsConfig *tls.Config) {
 	tlsConfig = &tls.Config{
 		RootCAs: certPool,

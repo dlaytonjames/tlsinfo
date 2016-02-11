@@ -5,15 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net"
+	"time"
 )
 
-type Cert struct {
+type CertInfo struct {
 	SubjectDN, IssuerDN DistinguishedName
 	SAN                 SubjectAltName
 }
 
-func (cert Cert) String() string {
+func (cert CertInfo) String() string {
 	s := fmt.Sprintf("  Issuer DN:\n")
 	s = s + fmt.Sprintf("      CN=%s\n", cert.IssuerDN.CN)
 	s = s + fmt.Sprintf("       O=%s\n", cert.IssuerDN.O)
@@ -25,6 +27,21 @@ func (cert Cert) String() string {
 	s = s + fmt.Sprintf("  Subject Alternative Name (SAN):\n")
 	s = s + fmt.Sprintf("	  DNSNames: %s\n", cert.SAN.DNSName)
 	s = s + fmt.Sprintf("	    IPAddr: %s\n", cert.SAN.IPAddr)
+
+	return s
+}
+
+type OcspInfo struct {
+	Status                 string
+	Serial                 *big.Int
+	ThisUpdate, NextUpdate time.Time
+}
+
+func (ocsp OcspInfo) String() string {
+	s := fmt.Sprintf("  Status: %s\n", ocsp.Status)
+	s = s + fmt.Sprintf("  Serial: %d\n", ocsp.Serial)
+	s = s + fmt.Sprintf("  This Update: %s\n", ocsp.ThisUpdate)
+	s = s + fmt.Sprintf("  Next Update: %s\n", ocsp.NextUpdate)
 
 	return s
 }
