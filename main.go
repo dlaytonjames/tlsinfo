@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/spazbite187/snatchtls/Godeps/_workspace/src/golang.org/x/crypto/ocsp"
-	"github.com/spazbite187/snatchtls/certs"
 	"github.com/spazbite187/snatchtls/net"
+	"github.com/spazbite187/snatchtls/pki"
 )
 
 type Args struct {
@@ -40,7 +40,7 @@ func main() {
 	fmt.Printf("Trust list: %s\n\n", args.TrustList)
 
 	// Get trust list
-	trustedCAs, err := certs.GetTrustedCAs(args.TrustList)
+	trustedCAs, err := pki.GetTrustedCAs(args.TrustList)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -110,16 +110,16 @@ func main() {
 	// get server cert subject name
 	peerCerts := tlsConnState.PeerCertificates
 	srvCert := peerCerts[0]
-	san := certs.SubjectAltName{
+	san := pki.SubjectAltName{
 		DNSName: srvCert.DNSNames,
 		IPAddr:  srvCert.IPAddresses,
 	}
-	serverCert := certs.CertInfo{
-		IssuerDN:  certs.GetIssuerDN(srvCert),
-		SubjectDN: certs.GetSubjectDN(srvCert),
+	serverCert := pki.CertInfo{
+		IssuerDN:  pki.GetIssuerDN(srvCert),
+		SubjectDN: pki.GetSubjectDN(srvCert),
 		SAN:       san,
 	}
-	ocspInfo := certs.OcspInfo{
+	ocspInfo := pki.OcspInfo{
 		Status:     status,
 		Serial:     serialNum,
 		ThisUpdate: thisUpdate,

@@ -1,4 +1,4 @@
-package certs
+package pki
 
 import (
 	"crypto/x509"
