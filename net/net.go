@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/spazbite187/snatchtls/certs"
+	"github.com/spazbite187/snatchtls/pki"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 type ConnInfo struct {
 	ResponseTime                      time.Duration
 	Status, Proto, TlsVersion, Cipher string
-	SrvCert                           certs.CertInfo
+	SrvCert                           pki.CertInfo
 	StapledOCSP                       bool
 }
 
