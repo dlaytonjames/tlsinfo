@@ -36,8 +36,8 @@ func main() {
 
 	// print out intro and args
 	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
-	fmt.Printf("  trust list: %s\n", args.TrustList)
-	fmt.Printf("         url: %s\n", args.Url)
+	fmt.Printf("       URL: %s\n", args.Url)
+	fmt.Printf("Trust list: %s\n\n", args.TrustList)
 
 	// Get trust list
 	trustedCAs, err := certs.GetTrustedCAs(args.TrustList)
@@ -52,8 +52,8 @@ func main() {
 	// Get http client
 	client := net.GetHttpClient(tlsConfig)
 
-	// start request timer
-	reqTimer := time.Now()
+	// start response timer
+	respStartTime := time.Now()
 	// perform http GET request
 	resp, err := client.Get(args.Url)
 	if err != nil {
@@ -62,7 +62,7 @@ func main() {
 	}
 	defer resp.Body.Close()
 	// end request timer
-	reqTime := time.Since(reqTimer)
+	respTime := time.Since(respStartTime)
 
 	// check response
 	if resp.StatusCode != 200 {
@@ -81,27 +81,6 @@ func main() {
 	cipher := net.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
 	tlsVersion := net.GetTlsName(tlsConnState.Version)
-	// get server cert subject name
-	peerCerts := tlsConnState.PeerCertificates
-	srvCert := peerCerts[0]
-	san := certs.SubjectAltName{
-		DNSName: srvCert.DNSNames,
-		IPAddr:  srvCert.IPAddresses,
-	}
-	serverCert := certs.Cert{
-		IssuerDN:  certs.GetIssuerDN(srvCert),
-		SubjectDN: certs.GetSubjectDN(srvCert),
-		SAN:       san,
-	}
-
-	// print out data
-	fmt.Println("\nResponse time: ", reqTime)
-	fmt.Println("HTTP response status: ", resp.Status)
-	fmt.Println("HTTP protocol: ", resp.Proto)
-	fmt.Println("TLS version: ", tlsVersion)
-	fmt.Println("TLS cipher: ", cipher)
-	fmt.Println("Server certificate:")
-	fmt.Println(serverCert)
 	// Check for stapled OCSP response
 	var status string
 	var serialNum *big.Int
@@ -110,11 +89,11 @@ func main() {
 	var stapledOcspResponse bool
 	rawOcspResp := tlsConnState.OCSPResponse
 	if len(rawOcspResp) > 0 {
+		stapledOcspResponse = true
 		ocspResp, err := ocsp.ParseResponse(rawOcspResp, nil)
 		if err != nil {
 			fmt.Println(err)
 		} else {
-			stapledOcspResponse = true
 			serialNum = ocspResp.SerialNumber
 			thisUpdate = ocspResp.ThisUpdate
 			nextUpdate = ocspResp.NextUpdate
@@ -128,13 +107,42 @@ func main() {
 			}
 		}
 	}
-	fmt.Printf("Stapled OCSP response: %v\n", stapledOcspResponse)
-	if stapledOcspResponse {
+	// get server cert subject name
+	peerCerts := tlsConnState.PeerCertificates
+	srvCert := peerCerts[0]
+	san := certs.SubjectAltName{
+		DNSName: srvCert.DNSNames,
+		IPAddr:  srvCert.IPAddresses,
+	}
+	serverCert := certs.CertInfo{
+		IssuerDN:  certs.GetIssuerDN(srvCert),
+		SubjectDN: certs.GetSubjectDN(srvCert),
+		SAN:       san,
+	}
+	ocspInfo := certs.OcspInfo{
+		Status:     status,
+		Serial:     serialNum,
+		ThisUpdate: thisUpdate,
+		NextUpdate: nextUpdate,
+	}
+	connInfo := net.ConnInfo{
+		ResponseTime: respTime,
+		Status:       resp.Status,
+		Proto:        resp.Proto,
+		TlsVersion:   tlsVersion,
+		Cipher:       cipher,
+		SrvCert:      serverCert,
+		StapledOCSP:  stapledOcspResponse,
+	}
+
+	// print out data
+	fmt.Println("Connection info:")
+	fmt.Println(connInfo)
+	fmt.Println("Server certificate:")
+	fmt.Println(serverCert)
+	if connInfo.StapledOCSP {
 		fmt.Println("\nOCSP response details:")
-		fmt.Println("       status:", status)
-		fmt.Printf("  cert serial: %d\n", serialNum)
-		fmt.Println("  this update:", thisUpdate)
-		fmt.Println("  next update:", nextUpdate)
+		fmt.Println(ocspInfo)
 	}
 
 	// end app timer
