@@ -11,14 +11,17 @@
 Snatch TLS
  version 1.0.0-SNAPSHOT
 
-  trust list: trustList.pem
-         url: https://www.google.com
+       URL: https://www.google.com
+Trust list: trustList.pem
 
-Response time:  145.309749ms
-HTTP response status:  200 OK
-HTTP protocol:  HTTP/1.1
-TLS version:  TLSv1.2
-TLS cipher:  TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+Connection info:
+Response time: 128.826675ms
+  HTTP response status: 200 OK
+  HTTP protocol: HTTP/1.1
+  TLS version: TLSv1.2
+  TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  Stapled OCSP response: false
+
 Server certificate:
   Issuer DN:
       CN=Google Internet Authority G2
@@ -32,9 +35,8 @@ Server certificate:
 	  DNSNames: [www.google.com]
 	    IPAddr: []
 
-Stapled OCSP response: false
 
-Total app time:  146.009911ms
+Total app time:  129.608231ms
 ```
 
 ### Help

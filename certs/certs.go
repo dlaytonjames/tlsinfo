@@ -56,6 +56,7 @@ type SubjectAltName struct {
 	IPAddr  []net.IP
 }
 
+// Get the certificate's issuer distinguished name.
 func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Issuer.CommonName,
@@ -65,6 +66,7 @@ func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	return dn
 }
 
+// Get the certificate's subject distinguished name.
 func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Subject.CommonName,
@@ -74,6 +76,7 @@ func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	return dn
 }
 
+// Get certificate pool of trusted CA certificates.
 func GetTrustedCAs(filename string) (certPool *x509.CertPool, err error) {
 	// read in trust list
 	trustedCerts, err := ioutil.ReadFile(filename)
