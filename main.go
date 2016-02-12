@@ -28,7 +28,7 @@ func main() {
 
 	// flag setup
 	var (
-		trustList = flag.String("t", "trustList.pem", " the filename for the trusted CAs (PEM encoded)")
+		trustList = flag.String("t", "", "the filename for the trusted CAs (PEM encoded)")
 		url       = flag.String("u", "https://www.google.com", "the url used for the connection")
 	)
 	flag.Parse()
@@ -36,14 +36,11 @@ func main() {
 
 	// print out intro and args
 	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
-	fmt.Printf("       URL: %s\n", args.Url)
-	fmt.Printf("Trust list: %s\n\n", args.TrustList)
 
 	// Get trust list
 	trustedCAs, err := pki.GetTrustedCAs(args.TrustList)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		args.TrustList = "(using system trust)"
 	}
 
 	// Get TLS configuration
@@ -136,6 +133,8 @@ func main() {
 	}
 
 	// print out data
+	fmt.Printf("Trust list: %s\n", args.TrustList)
+	fmt.Printf("       URL: %s\n\n", args.Url)
 	fmt.Println("Connection info:")
 	fmt.Println(connInfo)
 	fmt.Println("Server certificate:")
