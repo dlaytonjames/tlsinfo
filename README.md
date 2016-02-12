@@ -11,11 +11,11 @@
 Snatch TLS
  version 1.0.0-SNAPSHOT
 
+Trust list: (using system trust)
        URL: https://www.google.com
-Trust list: trustList.pem
 
 Connection info:
-Response time: 128.826675ms
+  Response time: 128.826675ms
   HTTP response status: 200 OK
   HTTP protocol: HTTP/1.1
   TLS version: TLSv1.2
@@ -35,7 +35,6 @@ Server certificate:
 	  DNSNames: [www.google.com]
 	    IPAddr: []
 
-
 Total app time:  129.608231ms
 ```
 
@@ -45,7 +44,7 @@ Total app time:  129.608231ms
 ```
 Usage of snatchtls:
   -t string
-    	 the filename for the trusted CAs (PEM encoded) (default "trustList.pem")
+    	the filename for the trusted CAs (PEM encoded)
   -u string
     	the url used for the connection (default "https://www.google.com")
 ```
