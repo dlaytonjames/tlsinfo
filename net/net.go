@@ -22,7 +22,7 @@ type ConnInfo struct {
 }
 
 func (connInfo ConnInfo) String() string {
-	s := fmt.Sprintf("Response time: %s\n", connInfo.ResponseTime)
+	s := fmt.Sprintf("  Response time: %s\n", connInfo.ResponseTime)
 	s = s + fmt.Sprintf("  HTTP response status: %s\n", connInfo.Status)
 	s = s + fmt.Sprintf("  HTTP protocol: %s\n", connInfo.Proto)
 	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TlsVersion)

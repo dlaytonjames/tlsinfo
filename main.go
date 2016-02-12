@@ -138,10 +138,10 @@ func main() {
 	fmt.Println("Connection info:")
 	fmt.Println(connInfo)
 	fmt.Println("Server certificate:")
-	fmt.Println(serverCert)
+	fmt.Print(serverCert)
 	if connInfo.StapledOCSP {
 		fmt.Println("\nOCSP response details:")
-		fmt.Println(ocspInfo)
+		fmt.Print(ocspInfo)
 	}
 
 	// end app timer
