@@ -20,6 +20,22 @@ type testResult struct {
 	Pass    bool
 }
 
+func (testResults TestResults) String() string {
+	s := fmt.Sprintf("Supported ciphers:\n")
+	for name, supported := range testResults.CipherResults {
+		if supported {
+			s = s + fmt.Sprintf("  %s\n", name)
+		}
+	}
+	s = s + fmt.Sprintf("Unsupported ciphers:\n")
+	for name, supported := range testResults.CipherResults {
+		if !supported {
+			s = s + fmt.Sprintf("  %s\n", name)
+		}
+	}
+	return s
+}
+
 // DefaultConnection performs a TLS connection using the default TLS configuration ciphers.
 func DefaultConnection(args arguments) {
 	// Get connection client
@@ -109,15 +125,17 @@ func TestConnections(args arguments) {
 	fmt.Println("Runing tests...")
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
-	for key, cipher := range net.CipherMap {
-		_, err := testConnection(args, cipher)
-		if err != nil {
-			testResults.CipherResults[key] = false
+	for name, cipher := range net.CipherMap {
+		testResult, err := testConnection(args, cipher)
+		if err != nil || !testResult.Pass {
+			testResults.CipherResults[name] = false
+		} else {
+			testResults.CipherResults[name] = true
 		}
-		testResults.CipherResults[key] = true
 	}
 	fmt.Println("Results:")
-	fmt.Printf("%v\n", testResults)
+	fmt.Print(testResults)
+
 }
 
 func testConnection(args arguments, cipher uint16) (testResult, error) {
