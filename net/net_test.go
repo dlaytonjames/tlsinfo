@@ -52,7 +52,7 @@ var tlsNameTests = []tlsNameTestSet{
 func TestGetHttpClient(t *testing.T) {
 	certPool := x509.NewCertPool()
 	certPool.AppendCertsFromPEM([]byte(TEST_CERT))
-	tlsConfig := getTlsConfig(certPool)
+	tlsConfig := getTlsConfig(certPool, 0)
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,

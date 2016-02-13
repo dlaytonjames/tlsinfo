@@ -49,10 +49,20 @@ func getHttpClient(tlsConfig *tls.Config) http.Client {
 }
 
 // Get configured TLS struct.
-func getTlsConfig(certPool *x509.CertPool) *tls.Config {
+func getTlsConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
+	if cipher == 0 {
+		tlsConfig := &tls.Config{
+			RootCAs:                certPool,
+			CipherSuites:           Ciphers,
+			MinVersion:             tls.VersionSSL30,
+			SessionTicketsDisabled: false,
+		}
+		return tlsConfig
+	}
+	selCipher := []uint16{cipher}
 	tlsConfig := &tls.Config{
 		RootCAs:                certPool,
-		CipherSuites:           Ciphers,
+		CipherSuites:           selCipher,
 		MinVersion:             tls.VersionSSL30,
 		SessionTicketsDisabled: false,
 	}
@@ -60,12 +70,12 @@ func getTlsConfig(certPool *x509.CertPool) *tls.Config {
 }
 
 // Get connection client struct containing a configured tls.Config and http.Client
-func GetConnClient(trustFile string) ConnClient {
+func GetConnClient(trustFile string, cipher uint16) ConnClient {
 	connClient := new(ConnClient)
 	// Get trust list
 	trustedCAs, _ := pki.GetTrustedCAs(trustFile)
 	// Get TLS configuration
-	connClient.TlsConfig = getTlsConfig(trustedCAs)
+	connClient.TlsConfig = getTlsConfig(trustedCAs, cipher)
 	// Get http client
 	connClient.HttpClient = getHttpClient(connClient.TlsConfig)
 	return *connClient
@@ -73,6 +83,7 @@ func GetConnClient(trustFile string) ConnClient {
 
 // Translate cipher to readable string.
 func GetCipherName(rawCipher uint16) string {
+	// TODO: update to use CipherMap
 	var cipher string
 	switch rawCipher {
 	case tls.TLS_RSA_WITH_RC4_128_SHA:
@@ -133,20 +144,39 @@ func GetTlsName(rawVersion uint16) string {
 const TIMEOUT = 10 * time.Second
 
 // Package variables
-var Ciphers = []uint16{
-	tls.TLS_RSA_WITH_RC4_128_SHA,
-	tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-	tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-	tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-	tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-	tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-	tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-	tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-	tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-	tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-	tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-}
+var (
+	Ciphers = []uint16{
+		tls.TLS_RSA_WITH_RC4_128_SHA,
+		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	}
+	CipherMap = map[string]uint16{
+		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	}
+)
