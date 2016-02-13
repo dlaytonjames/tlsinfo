@@ -1,13 +1,17 @@
 ## Snatch TLS (snatchtls)
 [![Build Status](https://travis-ci.com/spazbite187/snatchtls.svg?token=NMbRMJwwFjLPk9aX48wh&branch=master)](https://travis-ci.com/spazbite187/snatchtls)
+A command line tool for getting the connection details of a TLS end point. In test mode it will return a list of
+allowed TLS ciphers.
 
-### Get, Build and Install
-> $ go get github.com/spazbite187/snatchtls
-
-### Run
->$ snatchtls -t *{tustList filename}* -u *{connection url}*
-
+## Install
+```console
+$ go get -u github.com/spazbite187/snatchtls
 ```
+## Usage
+Running `snatchtls` without any arguments will use the system trust store for server certificate validation and
+`https://www.google.com` as the URL.
+```console
+$ snatchtls
 Snatch TLS
  version 1.0.0-SNAPSHOT
 
@@ -37,14 +41,31 @@ Server certificate:
 
 Total app time:  129.608231ms
 ```
-
-### Help
->$ snatchtls -h
-
+To run with a specific URL, use the `-u` flag to specify the TLS endpoint.
+```console
+$ snatchtls -u https://www.apple.com
 ```
+To run with a custom trust store, use the `-t` flag to specify the file containing a list of PEM encoded
+CA certificates.
+```console
+$ snatchtls -t trustList.pem
+```
+To run in test mode, use the `-test=true` flag. Test mode will attempt to connect using all the configure
+TLS ciphers and report on the results.
+```console
+$ snatchtls -test=true
+```
+Note: Any of the flags can be combined and in any order.
+## Help
+```console
+$ snatchtls -h
+Snatch TLS
+ version 1.0.0-SNAPSHOT
 Usage of snatchtls:
   -t string
     	the filename for the trusted CAs (PEM encoded)
+  -test
+    	when enabled, all ciphers will be tested
   -u string
     	the url used for the connection (default "https://www.google.com")
 ```
