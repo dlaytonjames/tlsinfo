@@ -10,18 +10,24 @@ import (
 	"github.com/spazbite187/snatchtls/pki"
 )
 
-func DefaultConnection(args Args) {
+// TestResults contains a map for the CipherResults.
+type TestResults struct {
+	CipherResults map[string]bool
+}
+
+// DefaultConnection performs a TLS connection using the default TLS configuration ciphers.
+func DefaultConnection(args arguments) {
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, 0)
-	client := connClient.HttpClient
-	trust := connClient.TlsConfig.RootCAs
+	client := connClient.HTTPClient
+	trust := connClient.TLSConfig.RootCAs
 	if trust == nil {
 		args.TrustList = "(using system trust)"
 	}
 	// start response timer
 	respStartTime := time.Now()
 	// perform http GET request
-	resp, err := client.Get(args.Url)
+	resp, err := client.Get(args.URL)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -46,14 +52,14 @@ func DefaultConnection(args Args) {
 	// get cipher name
 	cipher := net.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
-	tlsVersion := net.GetTlsName(tlsConnState.Version)
+	tlsVersion := net.GetTLSName(tlsConnState.Version)
 	// Check for stapled OCSP response
 	var stapledOcspResponse bool
-	var ocspInfo pki.OcspInfo
+	var ocspInfo pki.OCSPInfo
 	rawOcspResp := tlsConnState.OCSPResponse
 	if len(rawOcspResp) > 0 {
 		stapledOcspResponse = true
-		ocspInfo, err = pki.GetOcspInfo(rawOcspResp)
+		ocspInfo, err = pki.GetOCSPInfo(rawOcspResp)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -74,15 +80,15 @@ func DefaultConnection(args Args) {
 		ResponseTime: respTime,
 		Status:       resp.Status,
 		Proto:        resp.Proto,
-		TlsVersion:   tlsVersion,
+		TLSVersion:   tlsVersion,
 		Cipher:       cipher,
 		SrvCert:      serverCert,
 		StapledOCSP:  stapledOcspResponse,
 	}
 
 	// print out data
-	fmt.Printf("Trust list: %s\n", args.TrustList)
-	fmt.Printf("       URL: %s\n\n", args.Url)
+	fmt.Printf("\nTrust list: %s\n", args.TrustList)
+	fmt.Printf("       URL: %s\n\n", args.URL)
 	fmt.Println("Connection info:")
 	fmt.Println(connInfo)
 	fmt.Println("Server certificate:")
@@ -93,21 +99,33 @@ func DefaultConnection(args Args) {
 	}
 }
 
-func SpecificConnection(args Args, cipher uint16) {
+// TestConnections performs TLS connections using TLS configurations with all available ciphers.
+func TestConnections(args arguments) {
+	for key, cipher := range net.CipherMap {
+		fmt.Printf("\nTrying with %s\n", key)
+		result, err := testConnection(args, cipher)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Print(result)
+	}
+}
+
+func testConnection(args arguments, cipher uint16) (string, error) {
+	var results string
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, cipher)
-	client := connClient.HttpClient
-	trust := connClient.TlsConfig.RootCAs
+	client := connClient.HTTPClient
+	trust := connClient.TLSConfig.RootCAs
 	if trust == nil {
 		args.TrustList = "(using system trust)"
 	}
 	// start response timer
 	respStartTime := time.Now()
 	// perform http GET request
-	resp, err := client.Get(args.Url)
+	resp, err := client.Get(args.URL)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return results, err
 	}
 	defer resp.Body.Close()
 	// end request timer
@@ -115,21 +133,19 @@ func SpecificConnection(args Args, cipher uint16) {
 
 	// check response
 	if resp.StatusCode != 200 {
-		fmt.Println(err)
-		return
+		return results, err
 	}
 	// check TLS connection
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
 		err = errors.New("TLS connection failed")
-		fmt.Println(err)
-		return
+		return results, err
 	}
 
 	// get cipher name
 	cipherName := net.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
-	tlsVersion := net.GetTlsName(tlsConnState.Version)
+	tlsVersion := net.GetTLSName(tlsConnState.Version)
 	// Check for stapled OCSP response
 	var stapledOcspResponse bool
 	rawOcspResp := tlsConnState.OCSPResponse
@@ -152,12 +168,12 @@ func SpecificConnection(args Args, cipher uint16) {
 		ResponseTime: respTime,
 		Status:       resp.Status,
 		Proto:        resp.Proto,
-		TlsVersion:   tlsVersion,
+		TLSVersion:   tlsVersion,
 		Cipher:       cipherName,
 		SrvCert:      serverCert,
 		StapledOCSP:  stapledOcspResponse,
 	}
 
-	// print out data
-	fmt.Printf("Connection info:\n%s", connInfo)
+	results = fmt.Sprintf("Connection info:\n%s", connInfo)
+	return results, err
 }

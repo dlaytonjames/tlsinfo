@@ -10,14 +10,16 @@ import (
 	"github.com/spazbite187/snatchtls/pki"
 )
 
+// ConnClient contains TlsConfig and HttpClient used for TLS connections.
 type ConnClient struct {
-	TlsConfig  *tls.Config
-	HttpClient http.Client
+	TLSConfig  *tls.Config
+	HTTPClient http.Client
 }
 
+// ConnInfo contains detailed information from a successful TLS connection.
 type ConnInfo struct {
 	ResponseTime                      time.Duration
-	Status, Proto, TlsVersion, Cipher string
+	Status, Proto, TLSVersion, Cipher string
 	SrvCert                           pki.CertInfo
 	StapledOCSP                       bool
 }
@@ -26,7 +28,7 @@ func (connInfo ConnInfo) String() string {
 	s := fmt.Sprintf("  Response time: %s\n", connInfo.ResponseTime)
 	s = s + fmt.Sprintf("  HTTP response status: %s\n", connInfo.Status)
 	s = s + fmt.Sprintf("  HTTP protocol: %s\n", connInfo.Proto)
-	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TlsVersion)
+	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TLSVersion)
 	s = s + fmt.Sprintf("  TLS cipher: %s\n", connInfo.Cipher)
 	s = s + fmt.Sprintf("  Stapled OCSP response: %v\n", connInfo.StapledOCSP)
 
@@ -34,7 +36,7 @@ func (connInfo ConnInfo) String() string {
 }
 
 // Get configured HTTP client struct.
-func getHttpClient(tlsConfig *tls.Config) http.Client {
+func getHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
@@ -49,7 +51,7 @@ func getHttpClient(tlsConfig *tls.Config) http.Client {
 }
 
 // Get configured TLS struct.
-func getTlsConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
+func getTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 	if cipher == 0 {
 		tlsConfig := &tls.Config{
 			RootCAs:                certPool,
@@ -69,19 +71,19 @@ func getTlsConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 	return tlsConfig
 }
 
-// Get connection client struct containing a configured tls.Config and http.Client
+// GetConnClient gets a connection client containing a configured tls.Config and http.Client
 func GetConnClient(trustFile string, cipher uint16) ConnClient {
 	connClient := new(ConnClient)
 	// Get trust list
 	trustedCAs, _ := pki.GetTrustedCAs(trustFile)
 	// Get TLS configuration
-	connClient.TlsConfig = getTlsConfig(trustedCAs, cipher)
+	connClient.TLSConfig = getTLSConfig(trustedCAs, cipher)
 	// Get http client
-	connClient.HttpClient = getHttpClient(connClient.TlsConfig)
+	connClient.HTTPClient = getHTTPClient(connClient.TLSConfig)
 	return *connClient
 }
 
-// Translate cipher to readable string.
+// GetCipherName translates unint16 cipher to readable string.
 func GetCipherName(rawCipher uint16) string {
 	// TODO: update to use CipherMap
 	var cipher string
@@ -122,8 +124,8 @@ func GetCipherName(rawCipher uint16) string {
 	return cipher
 }
 
-// Translate version to readable string.
-func GetTlsName(rawVersion uint16) string {
+// GetTLSName translates unint16 version to readable string.
+func GetTLSName(rawVersion uint16) string {
 	var version string
 	switch rawVersion {
 	case tls.VersionSSL30:
@@ -140,7 +142,7 @@ func GetTlsName(rawVersion uint16) string {
 	return version
 }
 
-// Package constants
+// TIMEOUT hold the number of seconds for timeout settings.
 const TIMEOUT = 10 * time.Second
 
 // Package variables

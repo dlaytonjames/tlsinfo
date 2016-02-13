@@ -4,13 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"time"
-
-	"github.com/spazbite187/snatchtls/net"
 )
 
-type Args struct {
-	TrustList, Url string
-	Test bool
+type arguments struct {
+	TrustList, URL string
+	Test           bool
 }
 
 // package constants
@@ -21,7 +19,7 @@ const (
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
+	fmt.Printf("Snatch TLS\n version %s\n", VERSION)
 
 	// flag setup
 	var (
@@ -30,17 +28,13 @@ func main() {
 		test      = flag.Bool("test", false, "when enabled, all ciphers will be tested")
 	)
 	flag.Parse()
-	args := Args{*trustList, *url, *test}
+	args := arguments{*trustList, *url, *test}
 
-	// run default connection
-	DefaultConnection(args)
-
-	// if test true, run with all configured ciphers
+	// if test true, run with all configured ciphers, else run default connection
 	if args.Test {
-		for key, value := range net.CipherMap {
-			fmt.Printf("\nTrying with %s\n", key)
-			SpecificConnection(args, value)
-		}
+		TestConnections(args)
+	} else {
+		DefaultConnection(args)
 	}
 	// end app timer and print out total time
 	fmt.Println("\nTotal app time: ", time.Since(appTime))

@@ -12,6 +12,8 @@ import (
 	"golang.org/x/crypto/ocsp"
 )
 
+// CertInfo contains SubjectDN, IssuerDN and SAN representing a subset of
+// certificate information.
 type CertInfo struct {
 	SubjectDN, IssuerDN DistinguishedName
 	SAN                 SubjectAltName
@@ -33,13 +35,15 @@ func (cert CertInfo) String() string {
 	return s
 }
 
-type OcspInfo struct {
+// OCSPInfo contains Status, Serial, ThisUpdate and NextUpdate representing a
+// subset of OCSP response information.
+type OCSPInfo struct {
 	Status                 string
 	Serial                 *big.Int
 	ThisUpdate, NextUpdate time.Time
 }
 
-func (ocsp OcspInfo) String() string {
+func (ocsp OCSPInfo) String() string {
 	s := fmt.Sprintf("  Status: %s\n", ocsp.Status)
 	s = s + fmt.Sprintf("  Serial: %d\n", ocsp.Serial)
 	s = s + fmt.Sprintf("  This Update: %s\n", ocsp.ThisUpdate)
@@ -48,17 +52,21 @@ func (ocsp OcspInfo) String() string {
 	return s
 }
 
+// DistinguishedName contains CN, O and C representing a subset of a certificate's
+// distinguished name.
 type DistinguishedName struct {
 	CN   string
 	O, C []string
 }
 
+// SubjectAltName contains DNSName and IPAddr representing the contents of a certificate's
+// subject alternative name.
 type SubjectAltName struct {
 	DNSName []string
 	IPAddr  []net.IP
 }
 
-// Get the certificate's issuer distinguished name.
+// GetIssuerDN returns the certificate's issuer distinguished name.
 func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Issuer.CommonName,
@@ -68,7 +76,7 @@ func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	return dn
 }
 
-// Get the certificate's subject distinguished name.
+// GetSubjectDN returns the certificate's subject distinguished name.
 func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Subject.CommonName,
@@ -78,7 +86,8 @@ func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	return dn
 }
 
-// Get certificate pool of trusted CA certificates.
+// GetTrustedCAs returns a certificate pool of trusted CA certificates or an error
+// if an error occurs adding CA certificates to the pool.
 func GetTrustedCAs(filename string) (*x509.CertPool, error) {
 	certPool := x509.NewCertPool()
 	// read in trust list
@@ -94,10 +103,11 @@ func GetTrustedCAs(filename string) (*x509.CertPool, error) {
 	return certPool, err
 }
 
-// Get details from a DER encoded OCSP response.
-// TODO: Add issuer so the signature is validated
-func GetOcspInfo(ocspBytes []byte) (OcspInfo, error) {
-	ocspInfo := new(OcspInfo)
+// GetOCSPInfo returns OCSPInfo containing details from a DER encoded OCSP response or
+// an error if an error occurs parsing the OCSP response.
+func GetOCSPInfo(ocspBytes []byte) (OCSPInfo, error) {
+	// TODO: Add issuer so the signature is validated
+	ocspInfo := new(OCSPInfo)
 	ocspResp, err := ocsp.ParseResponse(ocspBytes, nil)
 	if err != nil {
 		return *ocspInfo, err
