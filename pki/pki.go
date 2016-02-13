@@ -8,6 +8,8 @@ import (
 	"math/big"
 	"net"
 	"time"
+
+	"golang.org/x/crypto/ocsp"
 )
 
 type CertInfo struct {
@@ -77,17 +79,40 @@ func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 }
 
 // Get certificate pool of trusted CA certificates.
-func GetTrustedCAs(filename string) (certPool *x509.CertPool, err error) {
+func GetTrustedCAs(filename string) (*x509.CertPool, error) {
+	certPool := x509.NewCertPool()
 	// read in trust list
 	trustedCerts, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return
+		return nil, err
 	}
 	// load trust list
-	certPool = x509.NewCertPool()
 	if !certPool.AppendCertsFromPEM(trustedCerts) {
 		err = errors.New("Failed to create trusted list of CAs")
-		return
+		return nil, err
 	}
-	return
+	return certPool, err
+}
+
+// Get details from a DER encoded OCSP response.
+// TODO: Add issuer so the signature is validated
+func GetOcspInfo(ocspBytes []byte) (OcspInfo, error) {
+	ocspInfo := new(OcspInfo)
+	ocspResp, err := ocsp.ParseResponse(ocspBytes, nil)
+	if err != nil {
+		return *ocspInfo, err
+	}
+
+	ocspInfo.Serial = ocspResp.SerialNumber
+	ocspInfo.ThisUpdate = ocspResp.ThisUpdate
+	ocspInfo.NextUpdate = ocspResp.NextUpdate
+	switch ocspResp.Status {
+	case ocsp.Good:
+		ocspInfo.Status = "Good"
+	case ocsp.Revoked:
+		ocspInfo.Status = "Revoked"
+	case ocsp.Unknown:
+		ocspInfo.Status = "Unknown"
+	}
+	return *ocspInfo, err
 }
