@@ -6,8 +6,7 @@ import (
 	"testing"
 )
 
-const (
-	TEST_CERT = `-----BEGIN CERTIFICATE-----
+const TestCert = `-----BEGIN CERTIFICATE-----
 MIIC+DCCAeACCQD6yTQ6qQbuNjANBgkqhkiG9w0BAQUFADA+MQswCQYDVQQGEwJV
 UzELMAkGA1UECBMCQ0ExEDAOBgNVBAoTB0NvbXBhbnkxEDAOBgNVBAMTB0NvbXBh
 bnkwHhcNMTYwMjExMDcwODUwWhcNMjYwMjA4MDcwODUwWjA+MQswCQYDVQQGEwJV
@@ -25,7 +24,6 @@ bDp3F0KbyRW9LJ7F+6pHwEZuSSuZxA6K/ZQ5eWzP2/lmAlmH9mJ4ZcOEw5b7btWb
 U0sWyvLO550nKzwvAJI7LhX40AWa3pppOO/eXyw01pzK5jV9lNk/5MukHfzaSYpm
 NyXHkKoRNr09pq8yqlyZoGalzc5Xlr3HpG9GYjttoS7+hFgcP5JZkWX/9yU=
 -----END CERTIFICATE-----`
-)
 
 var testOrg = []string{"Company"}
 var testCountry = []string{"US"}
@@ -41,7 +39,7 @@ type dnTestSet struct {
 }
 
 func TestGetIssuerDN(t *testing.T) {
-	testCertPem, _ := pem.Decode([]byte(TEST_CERT))
+	testCertPem, _ := pem.Decode([]byte(TestCert))
 	testCert, _ := x509.ParseCertificate(testCertPem.Bytes)
 	issuerDnTests := []dnTestSet{
 		{testCert, testDN},
@@ -61,7 +59,7 @@ func TestGetIssuerDN(t *testing.T) {
 }
 
 func TestGetSubjectDN(t *testing.T) {
-	testCertPem, _ := pem.Decode([]byte(TEST_CERT))
+	testCertPem, _ := pem.Decode([]byte(TestCert))
 	testCert, _ := x509.ParseCertificate(testCertPem.Bytes)
 	subjectDnTests := []dnTestSet{
 		{testCert, testDN},
