@@ -23,6 +23,7 @@ const (
 func main() {
 	// start app timer
 	appTime := time.Now()
+	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
 
 	// flag setup
 	var (
@@ -32,21 +33,13 @@ func main() {
 	flag.Parse()
 	args := Args{*trustList, *url}
 
-	// print out intro and args
-	fmt.Printf("Snatch TLS\n version %s\n\n", VERSION)
-
-	// Get trust list
-	trustedCAs, err := pki.GetTrustedCAs(args.TrustList)
-	if err != nil {
+	// Get connection client struct
+	connClient := net.GetConnClient(args.TrustList)
+	trust := connClient.TlsConfig.RootCAs
+	if trust == nil {
 		args.TrustList = "(using system trust)"
 	}
-
-	// Get TLS configuration
-	tlsConfig := net.GetTlsConfig(trustedCAs)
-
-	// Get http client
-	client := net.GetHttpClient(tlsConfig)
-
+	client := connClient.HttpClient
 	// start response timer
 	respStartTime := time.Now()
 	// perform http GET request

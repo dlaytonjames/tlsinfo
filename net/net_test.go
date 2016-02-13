@@ -52,7 +52,7 @@ var tlsNameTests = []tlsNameTestSet{
 func TestGetHttpClient(t *testing.T) {
 	certPool := x509.NewCertPool()
 	certPool.AppendCertsFromPEM([]byte(TEST_CERT))
-	tlsConfig := GetTlsConfig(certPool)
+	tlsConfig := getTlsConfig(certPool)
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
@@ -67,7 +67,7 @@ func TestGetHttpClient(t *testing.T) {
 		{tlsConfig, client},
 	}
 	for _, test := range clientTests {
-		v := GetHttpClient(tlsConfig)
+		v := getHttpClient(tlsConfig)
 		if v.Timeout != test.output.Timeout {
 			t.Errorf("Expected: %s, got: ", test.output.Timeout, v.Timeout)
 		}

@@ -10,9 +10,10 @@ import (
 	"github.com/spazbite187/snatchtls/pki"
 )
 
-const (
-	TIMEOUT = 10 * time.Second
-)
+type ConnClient struct {
+	TlsConfig  *tls.Config
+	HttpClient http.Client
+}
 
 type ConnInfo struct {
 	ResponseTime                      time.Duration
@@ -33,7 +34,7 @@ func (connInfo ConnInfo) String() string {
 }
 
 // Get configured HTTP client struct.
-func GetHttpClient(tlsConfig *tls.Config) http.Client {
+func getHttpClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
@@ -48,30 +49,26 @@ func GetHttpClient(tlsConfig *tls.Config) http.Client {
 }
 
 // Get configured TLS struct.
-func GetTlsConfig(certPool *x509.CertPool) *tls.Config {
+func getTlsConfig(certPool *x509.CertPool) *tls.Config {
 	tlsConfig := &tls.Config{
-		RootCAs: certPool,
-		CipherSuites: []uint16{
-			tls.TLS_RSA_WITH_RC4_128_SHA,
-			tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-			tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-			tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-			tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-			tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		},
+		RootCAs:                certPool,
+		CipherSuites:           Ciphers,
 		MinVersion:             tls.VersionSSL30,
 		SessionTicketsDisabled: false,
 	}
 	return tlsConfig
+}
+
+// Get connection client struct containing a configured tls.Config and http.Client
+func GetConnClient(trustFile string) ConnClient {
+	connClient := new(ConnClient)
+	// Get trust list
+	trustedCAs, _ := pki.GetTrustedCAs(trustFile)
+	// Get TLS configuration
+	connClient.TlsConfig = getTlsConfig(trustedCAs)
+	// Get http client
+	connClient.HttpClient = getHttpClient(connClient.TlsConfig)
+	return *connClient
 }
 
 // Translate cipher to readable string.
@@ -130,4 +127,26 @@ func GetTlsName(rawVersion uint16) string {
 		version = "unknown"
 	}
 	return version
+}
+
+// Package constants
+const TIMEOUT = 10 * time.Second
+
+// Package variables
+var Ciphers = []uint16{
+	tls.TLS_RSA_WITH_RC4_128_SHA,
+	tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+	tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+	tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+	tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+	tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+	tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+	tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+	tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 }
