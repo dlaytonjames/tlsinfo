@@ -4,11 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"math/big"
 	"os"
 	"time"
 
-	"github.com/spazbite187/snatchtls/Godeps/_workspace/src/golang.org/x/crypto/ocsp"
 	"github.com/spazbite187/snatchtls/net"
 	"github.com/spazbite187/snatchtls/pki"
 )
@@ -79,32 +77,17 @@ func main() {
 	// get tls version name
 	tlsVersion := net.GetTlsName(tlsConnState.Version)
 	// Check for stapled OCSP response
-	var status string
-	var serialNum *big.Int
-	var thisUpdate time.Time
-	var nextUpdate time.Time
 	var stapledOcspResponse bool
+	var ocspInfo pki.OcspInfo
 	rawOcspResp := tlsConnState.OCSPResponse
 	if len(rawOcspResp) > 0 {
 		stapledOcspResponse = true
-		ocspResp, err := ocsp.ParseResponse(rawOcspResp, nil)
+		ocspInfo, err = pki.GetOcspInfo(rawOcspResp)
 		if err != nil {
 			fmt.Println(err)
-		} else {
-			serialNum = ocspResp.SerialNumber
-			thisUpdate = ocspResp.ThisUpdate
-			nextUpdate = ocspResp.NextUpdate
-			switch ocspResp.Status {
-			case ocsp.Good:
-				status = "Good"
-			case ocsp.Revoked:
-				status = "Revoked"
-			case ocsp.Unknown:
-				status = "Unknown"
-			}
 		}
 	}
-	// get server cert subject name
+	// created structs using data obtained from the response
 	peerCerts := tlsConnState.PeerCertificates
 	srvCert := peerCerts[0]
 	san := pki.SubjectAltName{
@@ -115,12 +98,6 @@ func main() {
 		IssuerDN:  pki.GetIssuerDN(srvCert),
 		SubjectDN: pki.GetSubjectDN(srvCert),
 		SAN:       san,
-	}
-	ocspInfo := pki.OcspInfo{
-		Status:     status,
-		Serial:     serialNum,
-		ThisUpdate: thisUpdate,
-		NextUpdate: nextUpdate,
 	}
 	connInfo := net.ConnInfo{
 		ResponseTime: respTime,
@@ -143,7 +120,6 @@ func main() {
 		fmt.Println("\nOCSP response details:")
 		fmt.Print(ocspInfo)
 	}
-
-	// end app timer
+	// end app timer and print out total time
 	fmt.Println("\nTotal app time: ", time.Since(appTime))
 }
