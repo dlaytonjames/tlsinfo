@@ -113,10 +113,10 @@ func DefaultConnection(args arguments) {
 	fmt.Println("Connection info:")
 	fmt.Println(connInfo)
 	fmt.Println("Server certificate:")
-	fmt.Print(serverCert)
+	fmt.Println(serverCert)
 	if connInfo.StapledOCSP {
-		fmt.Println("\nOCSP response details:")
-		fmt.Print(ocspInfo)
+		fmt.Println("OCSP response details:")
+		fmt.Println(ocspInfo)
 	}
 }
 
