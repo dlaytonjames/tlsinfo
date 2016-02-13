@@ -15,6 +15,11 @@ type TestResults struct {
 	CipherResults map[string]bool
 }
 
+type testResult struct {
+	Details string
+	Pass    bool
+}
+
 // DefaultConnection performs a TLS connection using the default TLS configuration ciphers.
 func DefaultConnection(args arguments) {
 	// Get connection client
@@ -101,18 +106,22 @@ func DefaultConnection(args arguments) {
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
 func TestConnections(args arguments) {
+	fmt.Println("Runing tests...")
+	var testResults = TestResults{}
+	testResults.CipherResults = make(map[string]bool)
 	for key, cipher := range net.CipherMap {
-		fmt.Printf("\nTrying with %s\n", key)
-		result, err := testConnection(args, cipher)
+		_, err := testConnection(args, cipher)
 		if err != nil {
-			fmt.Println(err)
+			testResults.CipherResults[key] = false
 		}
-		fmt.Print(result)
+		testResults.CipherResults[key] = true
 	}
+	fmt.Println("Results:")
+	fmt.Printf("%v\n", testResults)
 }
 
-func testConnection(args arguments, cipher uint16) (string, error) {
-	var results string
+func testConnection(args arguments, cipher uint16) (testResult, error) {
+	testResult := testResult{}
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, cipher)
 	client := connClient.HTTPClient
@@ -125,7 +134,8 @@ func testConnection(args arguments, cipher uint16) (string, error) {
 	// perform http GET request
 	resp, err := client.Get(args.URL)
 	if err != nil {
-		return results, err
+		testResult.Pass = false
+		return testResult, err
 	}
 	defer resp.Body.Close()
 	// end request timer
@@ -133,13 +143,15 @@ func testConnection(args arguments, cipher uint16) (string, error) {
 
 	// check response
 	if resp.StatusCode != 200 {
-		return results, err
+		testResult.Pass = false
+		return testResult, err
 	}
 	// check TLS connection
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
 		err = errors.New("TLS connection failed")
-		return results, err
+		testResult.Pass = false
+		return testResult, err
 	}
 
 	// get cipher name
@@ -174,6 +186,7 @@ func testConnection(args arguments, cipher uint16) (string, error) {
 		StapledOCSP:  stapledOcspResponse,
 	}
 
-	results = fmt.Sprintf("Connection info:\n%s", connInfo)
-	return results, err
+	testResult.Details = fmt.Sprintf("Connection info:\n%s", connInfo)
+	testResult.Pass = true
+	return testResult, err
 }
