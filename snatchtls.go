@@ -114,15 +114,16 @@ func DefaultConnection(args arguments) {
 	fmt.Println("Connection info:")
 	fmt.Println(connInfo)
 	fmt.Println("Server certificate:")
-	fmt.Println(serverCert)
+	fmt.Print(serverCert)
 	if connInfo.StapledOCSP {
-		fmt.Println("OCSP response details:")
-		fmt.Println(ocspInfo)
+		fmt.Println("\nOCSP response details:")
+		fmt.Print(ocspInfo)
 	}
 }
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
 func TestConnections(args arguments) {
+	fmt.Println("\nTesting connection...\n")
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
 	resultChan := make(chan TestResult)
