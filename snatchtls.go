@@ -15,9 +15,10 @@ type TestResults struct {
 	CipherResults map[string]bool
 }
 
-type testResult struct {
-	Details string
-	Pass    bool
+// TestResult contains a Pass bool to indicate pass/fail and the CipherName.
+type TestResult struct {
+	Pass       bool
+	CipherName string
 }
 
 func (testResults TestResults) String() string {
@@ -122,89 +123,49 @@ func DefaultConnection(args arguments) {
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
 func TestConnections(args arguments) {
-	fmt.Println("Runing tests...")
+	fmt.Println("\nTesting connection...\n")
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
-	for name, cipher := range net.CipherMap {
-		testResult, err := testConnection(args, cipher)
-		if err != nil || !testResult.Pass {
-			testResults.CipherResults[name] = false
-		} else {
-			testResults.CipherResults[name] = true
-		}
+	resultChan := make(chan TestResult)
+	for _, cipher := range net.CipherMap {
+		go func(cipher interface{}) {
+			cipherInt := cipher.(uint16)
+			resultChan <- testConnection(args, cipherInt)
+		}(cipher)
 	}
-	fmt.Println("Results:")
-	fmt.Print(testResults)
 
+	for i := 0; i < len(net.Ciphers); i++ {
+		result := <-resultChan
+		testResults.CipherResults[result.CipherName] = result.Pass
+	}
+
+	fmt.Print(testResults)
 }
 
-func testConnection(args arguments, cipher uint16) (testResult, error) {
-	testResult := testResult{}
+func testConnection(args arguments, cipher uint16) TestResult {
+	testResults := TestResult{
+		Pass:       false,
+		CipherName: net.GetCipherName(cipher),
+	}
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, cipher)
 	client := connClient.HTTPClient
-	trust := connClient.TLSConfig.RootCAs
-	if trust == nil {
-		args.TrustList = "(using system trust)"
-	}
-	// start response timer
-	respStartTime := time.Now()
 	// perform http GET request
 	resp, err := client.Get(args.URL)
 	if err != nil {
-		testResult.Pass = false
-		return testResult, err
+		return testResults
 	}
 	defer resp.Body.Close()
-	// end request timer
-	respTime := time.Since(respStartTime)
 
 	// check response
 	if resp.StatusCode != 200 {
-		testResult.Pass = false
-		return testResult, err
+		return testResults
 	}
 	// check TLS connection
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
-		err = errors.New("TLS connection failed")
-		testResult.Pass = false
-		return testResult, err
+		return testResults
 	}
-
-	// get cipher name
-	cipherName := net.GetCipherName(tlsConnState.CipherSuite)
-	// get tls version name
-	tlsVersion := net.GetTLSName(tlsConnState.Version)
-	// Check for stapled OCSP response
-	var stapledOcspResponse bool
-	rawOcspResp := tlsConnState.OCSPResponse
-	if len(rawOcspResp) > 0 {
-		stapledOcspResponse = true
-	}
-	// created structs using data obtained from the response
-	peerCerts := tlsConnState.PeerCertificates
-	srvCert := peerCerts[0]
-	san := pki.SubjectAltName{
-		DNSName: srvCert.DNSNames,
-		IPAddr:  srvCert.IPAddresses,
-	}
-	serverCert := pki.CertInfo{
-		IssuerDN:  pki.GetIssuerDN(srvCert),
-		SubjectDN: pki.GetSubjectDN(srvCert),
-		SAN:       san,
-	}
-	connInfo := net.ConnInfo{
-		ResponseTime: respTime,
-		Status:       resp.Status,
-		Proto:        resp.Proto,
-		TLSVersion:   tlsVersion,
-		Cipher:       cipherName,
-		SrvCert:      serverCert,
-		StapledOCSP:  stapledOcspResponse,
-	}
-
-	testResult.Details = fmt.Sprintf("Connection info:\n%s", connInfo)
-	testResult.Pass = true
-	return testResult, err
+	testResults.Pass = true
+	return testResults
 }

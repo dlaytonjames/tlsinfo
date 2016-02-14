@@ -75,12 +75,12 @@ func TestGetHttpClient(t *testing.T) {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
-		TLSHandshakeTimeout:   TIMEOUT,
-		ResponseHeaderTimeout: TIMEOUT,
+		TLSHandshakeTimeout:   Timeout,
+		ResponseHeaderTimeout: Timeout,
 	}
 	client := http.Client{
 		Transport: tr,
-		Timeout:   TIMEOUT,
+		Timeout:   Timeout,
 	}
 	clientTests := []clientTestSet{
 		{tlsConfig, client},

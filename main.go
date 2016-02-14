@@ -32,6 +32,7 @@ func main() {
 
 	// if test true, run with all configured ciphers, else run default connection
 	if args.Test {
+		DefaultConnection(args)
 		TestConnections(args)
 	} else {
 		DefaultConnection(args)

@@ -55,6 +55,54 @@ To run in test mode, use the `-test=true` flag. Test mode will attempt to connec
 TLS ciphers and report on the results.
 ```console
 $ snatchtls -test=true
+Snatch TLS
+ version 1.0.0-SNAPSHOT
+
+Trust list: (using system trust)
+       URL: https://www.google.com
+
+Connection info:
+  Response time: 174.552576ms
+  HTTP response status: 200 OK
+  HTTP protocol: HTTP/1.1
+  TLS version: TLSv1.2
+  TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+  Stapled OCSP response: false
+
+Server certificate:
+  Issuer DN:
+      CN=Google Internet Authority G2
+       O=[Google Inc]
+       C=[US]
+  Subject DN:
+      CN=www.google.com
+       O=[Google Inc]
+       C=[US]
+  Subject Alternative Name (SAN):
+	  DNSNames: [www.google.com]
+	    IPAddr: []
+
+Testing connection...
+
+Supported ciphers:
+  TLS_RSA_WITH_AES_128_CBC_SHA
+  TLS_RSA_WITH_AES_256_CBC_SHA
+  TLS_ECDHE_RSA_WITH_RC4_128_SHA
+  TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+  TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+  TLS_RSA_WITH_3DES_EDE_CBC_SHA
+  TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+  TLS_RSA_WITH_RC4_128_SHA
+  TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+Unsupported ciphers:
+  TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+  TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+  TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+  TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+  TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+  TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+
+Total app time:  313.785536ms
 ```
 Note: Any of the flags can be combined and in any order.
 ## Help
