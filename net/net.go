@@ -40,12 +40,12 @@ func getHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
-		TLSHandshakeTimeout:   TIMEOUT,
-		ResponseHeaderTimeout: TIMEOUT,
+		TLSHandshakeTimeout:   Timeout,
+		ResponseHeaderTimeout: Timeout,
 	}
 	client := http.Client{
 		Transport: tr,
-		Timeout:   TIMEOUT,
+		Timeout:   Timeout,
 	}
 	return client
 }
@@ -85,7 +85,6 @@ func GetConnClient(trustFile string, cipher uint16) ConnClient {
 
 // GetCipherName translates unint16 cipher to readable string.
 func GetCipherName(rawCipher uint16) string {
-	// TODO: update to use CipherMap
 	var cipher string
 	switch rawCipher {
 	case tls.TLS_RSA_WITH_RC4_128_SHA:
@@ -142,8 +141,8 @@ func GetTLSName(rawVersion uint16) string {
 	return version
 }
 
-// TIMEOUT hold the number of seconds for timeout settings.
-const TIMEOUT = 10 * time.Second
+// Timeout hold the number of seconds for timeout settings.
+const Timeout = 10 * time.Second
 
 // Package variables
 var (

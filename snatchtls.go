@@ -15,6 +15,12 @@ type TestResults struct {
 	CipherResults map[string]bool
 }
 
+// TestResult contains a Pass bool to indicate pass/fail and the CipherName.
+type TestResult struct {
+	Pass       bool
+	CipherName string
+}
+
 func (testResults TestResults) String() string {
 	s := fmt.Sprintf("Supported ciphers:\n")
 	for name, supported := range testResults.CipherResults {
@@ -117,36 +123,48 @@ func DefaultConnection(args arguments) {
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
 func TestConnections(args arguments) {
-	fmt.Println("Runing tests...")
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
-	for name, cipher := range net.CipherMap {
-		testResults.CipherResults[name] = testConnection(args, cipher)
+	resultChan := make(chan TestResult)
+	for _, cipher := range net.CipherMap {
+		go func(cipher interface{}) {
+			cipherInt := cipher.(uint16)
+			resultChan <- testConnection(args, cipherInt)
+		}(cipher)
 	}
-	fmt.Println("Results:")
+
+	for i := 0; i < len(net.Ciphers); i++ {
+		result := <-resultChan
+		testResults.CipherResults[result.CipherName] = result.Pass
+	}
+
 	fmt.Print(testResults)
 }
 
-func testConnection(args arguments, cipher uint16) bool {
+func testConnection(args arguments, cipher uint16) TestResult {
+	testResults := TestResult{
+		Pass:       false,
+		CipherName: net.GetCipherName(cipher),
+	}
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, cipher)
 	client := connClient.HTTPClient
 	// perform http GET request
 	resp, err := client.Get(args.URL)
 	if err != nil {
-		return false
+		return testResults
 	}
 	defer resp.Body.Close()
 
 	// check response
 	if resp.StatusCode != 200 {
-		return false
+		return testResults
 	}
 	// check TLS connection
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
-		return false
+		return testResults
 	}
-
-	return true
+	testResults.Pass = true
+	return testResults
 }
