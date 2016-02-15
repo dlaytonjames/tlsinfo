@@ -88,7 +88,7 @@ func TestGetHttpClient(t *testing.T) {
 	for _, test := range clientTests {
 		v := getHTTPClient(tlsConfig)
 		if v.Timeout != test.output.Timeout {
-			t.Errorf("Expected: %s, got: ", test.output.Timeout, v.Timeout)
+			t.Errorf("Expected: %s, got: %s", test.output.Timeout, v.Timeout)
 		}
 	}
 }
@@ -97,7 +97,7 @@ func TestGetCipherName(t *testing.T) {
 	for _, test := range cipherTests {
 		v := GetCipherName(test.input)
 		if v != test.output {
-			t.Errorf("Expected: %s, got: ", test.output, v)
+			t.Errorf("Expected: %s, got: %s", test.output, v)
 		}
 	}
 }
@@ -106,7 +106,7 @@ func TestGetTlsName(t *testing.T) {
 	for _, test := range tlsNameTests {
 		v := GetTLSName(test.input)
 		if v != test.output {
-			t.Errorf("Expected: %s, got: ", test.output, v)
+			t.Errorf("Expected: %s, got: %s", test.output, v)
 		}
 	}
 }

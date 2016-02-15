@@ -1,4 +1,4 @@
-package snatchtls
+package client
 
 import (
 	"errors"
@@ -134,7 +134,8 @@ func DefaultConnection(args Arguments) {
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
 func TestConnections(args Arguments) {
-	fmt.Println("\nTesting connection...\n")
+	fmt.Println("\nTesting connection...")
+	fmt.Println()
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
 	resultChan := make(chan TestResult)

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spazbite187/snatchtls"
+	"github.com/spazbite187/snatchtls/client"
 )
 
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n version %s\n", snatchtls.Version)
+	fmt.Printf("Snatch TLS\n version %s\n", client.Version)
 
 	// flag setup
 	var (
@@ -20,14 +20,18 @@ func main() {
 		test      = flag.Bool("test", false, "when enabled, all ciphers will be tested")
 	)
 	flag.Parse()
-	args := snatchtls.Arguments{*trustList, *url, *test}
+	args := client.Arguments{
+		TrustList: *trustList,
+		URL:       *url,
+		Test:      *test,
+	}
 
 	// if test true, run with all configured ciphers, else run default connection
 	if args.Test {
-		snatchtls.DefaultConnection(args)
-		snatchtls.TestConnections(args)
+		client.DefaultConnection(args)
+		client.TestConnections(args)
 	} else {
-		snatchtls.DefaultConnection(args)
+		client.DefaultConnection(args)
 	}
 	// end app timer and print out total time
 	fmt.Println("\nTotal app time: ", time.Since(appTime))
