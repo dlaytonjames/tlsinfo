@@ -1,4 +1,4 @@
-package main
+package snatchtls
 
 import (
 	"errors"
@@ -9,6 +9,16 @@ import (
 	"github.com/spazbite187/snatchtls/net"
 	"github.com/spazbite187/snatchtls/pki"
 )
+
+// Version contains details about the current version.
+const Version = "1.0.0-DEV"
+
+// Arguments contains the TrustList, URL along with a bool Test, indicating
+// testing mode.
+type Arguments struct {
+	TrustList, URL string
+	Test           bool
+}
 
 // TestResults contains a map for the CipherResults.
 type TestResults struct {
@@ -21,6 +31,7 @@ type TestResult struct {
 	CipherName string
 }
 
+// String method using the Stringer interface.
 func (testResults TestResults) String() string {
 	s := fmt.Sprintf("Supported ciphers:\n")
 	for name, supported := range testResults.CipherResults {
@@ -38,7 +49,7 @@ func (testResults TestResults) String() string {
 }
 
 // DefaultConnection performs a TLS connection using the default TLS configuration ciphers.
-func DefaultConnection(args arguments) {
+func DefaultConnection(args Arguments) {
 	// Get connection client
 	connClient := net.GetConnClient(args.TrustList, 0)
 	client := connClient.HTTPClient
@@ -122,7 +133,7 @@ func DefaultConnection(args arguments) {
 }
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
-func TestConnections(args arguments) {
+func TestConnections(args Arguments) {
 	fmt.Println("\nTesting connection...\n")
 	var testResults = TestResults{}
 	testResults.CipherResults = make(map[string]bool)
@@ -142,7 +153,7 @@ func TestConnections(args arguments) {
 	fmt.Print(testResults)
 }
 
-func testConnection(args arguments, cipher uint16) TestResult {
+func testConnection(args Arguments, cipher uint16) TestResult {
 	testResults := TestResult{
 		Pass:       false,
 		CipherName: net.GetCipherName(cipher),
