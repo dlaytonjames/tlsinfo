@@ -8,9 +8,11 @@ COMMIT=`git log --oneline -n 1 --format="%h"`
 
 LDFLAGS=-ldflags "-X ${PKG}/client.Version=${VERSION} -X ${PKG}/client.BuildTime=${BUILDTIME} -X ${PKG}/client.Commit=${COMMIT}"
 
-default: all
+default: some
 
-all: format vet li  nt test build
+all: format vet lint test build
+
+some: format test build
 
 format:
 	go fmt ${PKG}/...
