@@ -10,7 +10,7 @@ LDFLAGS=-ldflags "-X ${PKG}/client.Version=${VERSION} -X ${PKG}/client.BuildTime
 
 default: all
 
-all: format vet lint test build
+all: format vet li  nt test build
 
 format:
 	go fmt ${PKG}/...

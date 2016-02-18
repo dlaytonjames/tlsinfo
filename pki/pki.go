@@ -9,7 +9,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/spazbite187/snatchtls/Godeps/_workspace/src/golang.org/x/crypto/ocsp"
+	"golang.org/x/crypto/ocsp"
 )
 
 // CertInfo contains SubjectDN, IssuerDN and SAN representing a subset of
