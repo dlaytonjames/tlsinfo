@@ -4,10 +4,12 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/spazbite187/snatchtls/pki"
+	"golang.org/x/net/http2"
 )
 
 // ConnClient contains TlsConfig and HttpClient used for TLS connections.
@@ -42,6 +44,11 @@ func getHTTPClient(tlsConfig *tls.Config) http.Client {
 		DisableCompression:    false,
 		TLSHandshakeTimeout:   Timeout,
 		ResponseHeaderTimeout: Timeout,
+	}
+	// enable HTTP2
+	err := http2.ConfigureTransport(tr)
+	if err != nil {
+		log.Printf("Unable to enable HTTP/2 \n%s", err)
 	}
 	client := http.Client{
 		Transport: tr,
