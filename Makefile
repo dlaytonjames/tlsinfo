@@ -26,5 +26,13 @@ lint:
 test:
 	go test -v ${PKG}/...
 
-build:
-	go build ${LDFLAGS} -o ${OUTPUT} ${PKG}
+build: build_mac build_linux build_arm
+
+build_mac:
+	env GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${OUTPUT}-mac ${PKG}
+
+build_linux:
+	env GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${OUTPUT}-linux ${PKG}
+
+build_arm:
+	env GOOS=linux GOARCH=arm GOARM=7 go build ${LDFLAGS} -o ${OUTPUT}-arm ${PKG}
