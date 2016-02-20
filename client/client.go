@@ -95,7 +95,7 @@ func TestConnections(args Arguments) {
 		result := <-resultChan
 		results.Ciphers[result.CipherName] = result.Pass
 	}
-
+	// print results
 	fmt.Print(results)
 }
 
