@@ -33,7 +33,8 @@ type TestResult struct {
 // Report contains pointers to the response data needed for displaying the connection
 // information to the user.
 type Report struct {
-	Args    Arguments
+	Trust   string
+	URL     string
 	Ciphers CipherResults
 	Results []TestResult
 }
@@ -66,12 +67,13 @@ func DefaultConnection(args Arguments) {
 		os.Exit(1)
 	}
 	report := Report{
-		Args:    args,
+		Trust:   args.TrustList,
+		URL:     args.URL,
 		Results: []TestResult{result},
 	}
-	// print out data
-	fmt.Printf("\nTrust list: %s\n", report.Args.TrustList)
-	fmt.Printf("       URL: %s\n\n", report.Args.URL)
+	// display the report
+	fmt.Printf("\nTrust: %s\n", report.Trust)
+	fmt.Printf("  URL: %s\n\n", report.URL)
 	fmt.Println("Connection info:")
 	fmt.Print(result.Info)
 }
