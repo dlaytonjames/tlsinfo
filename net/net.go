@@ -23,6 +23,7 @@ type ConnInfo struct {
 	Status, Proto, TLSVersion, Cipher string
 	SrvCert                           pki.CertInfo
 	StapledOCSP                       bool
+	OCSPResp                          pki.OCSPInfo
 }
 
 func (connInfo ConnInfo) String() string {
@@ -32,11 +33,17 @@ func (connInfo ConnInfo) String() string {
 	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TLSVersion)
 	s = s + fmt.Sprintf("  TLS cipher: %s\n", connInfo.Cipher)
 	s = s + fmt.Sprintf("  Stapled OCSP response: %v\n", connInfo.StapledOCSP)
+	s = s + fmt.Sprintln("Server certificate:")
+	s = s + fmt.Sprint(connInfo.SrvCert)
+	if connInfo.StapledOCSP {
+		s = s + fmt.Sprintln("\nOCSP response details:")
+		s = s + fmt.Sprint(connInfo.OCSPResp)
+	}
 
 	return s
 }
 
-// Get configured HTTP client struct.
+// GetHTTPClient returns a configured HTTP client struct.
 func GetHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
@@ -56,7 +63,7 @@ func GetHTTPClient(tlsConfig *tls.Config) http.Client {
 	return client
 }
 
-// Get configured TLS struct.
+// GetTLSConfig returns a configured TLS struct.
 func GetTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 	if cipher == 0 {
 		tlsConfig := &tls.Config{
