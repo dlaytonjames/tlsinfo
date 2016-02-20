@@ -3,10 +3,10 @@ VERSION=1.0.0-DEV
 PKG=github.com/spazbite187/snatchtls
 BINARY=snatchtls
 OUTPUT=$(GOPATH)/bin/${BINARY}
-BUILDTIME=`date -u "+%Y%m%d%H%M%S"`
+BUILDTIME=`date -u "+%s"`
 COMMIT=`git log --oneline -n 1 --format="%h"`
 
-LDFLAGS=-ldflags "-X ${PKG}/client.Version=${VERSION} -X ${PKG}/client.BuildTime=${BUILDTIME} -X ${PKG}/client.Commit=${COMMIT}"
+LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILDTIME} -X main.Commit=${COMMIT}"
 
 default: some
 

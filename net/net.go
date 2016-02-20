@@ -12,11 +12,46 @@ import (
 	"golang.org/x/net/http2"
 )
 
-// ConnClient contains TlsConfig and HttpClient used for TLS connections.
-type ConnClient struct {
-	TLSConfig  *tls.Config
-	HTTPClient http.Client
-}
+// Timeout hold the number of seconds for timeout settings.
+const Timeout = 10 * time.Second
+
+// Package variables
+var (
+	Ciphers = []uint16{
+		tls.TLS_RSA_WITH_RC4_128_SHA,
+		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	}
+	CipherMap = map[string]uint16{
+		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	}
+)
 
 // ConnInfo contains detailed information from a successful TLS connection.
 type ConnInfo struct {
@@ -24,6 +59,7 @@ type ConnInfo struct {
 	Status, Proto, TLSVersion, Cipher string
 	SrvCert                           pki.CertInfo
 	StapledOCSP                       bool
+	OCSPResp                          pki.OCSPInfo
 }
 
 func (connInfo ConnInfo) String() string {
@@ -33,19 +69,25 @@ func (connInfo ConnInfo) String() string {
 	s = s + fmt.Sprintf("  TLS version: %s\n", connInfo.TLSVersion)
 	s = s + fmt.Sprintf("  TLS cipher: %s\n", connInfo.Cipher)
 	s = s + fmt.Sprintf("  Stapled OCSP response: %v\n", connInfo.StapledOCSP)
+	s = s + fmt.Sprintln("Server certificate:")
+	s = s + fmt.Sprint(connInfo.SrvCert)
+	if connInfo.StapledOCSP {
+		s = s + fmt.Sprintln("\nOCSP response details:")
+		s = s + fmt.Sprint(connInfo.OCSPResp)
+	}
 
 	return s
 }
 
-// Get configured HTTP client struct.
-func getHTTPClient(tlsConfig *tls.Config) http.Client {
+// GetHTTPClient returns a configured HTTP client struct.
+func GetHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
 		TLSHandshakeTimeout:   Timeout,
 		ResponseHeaderTimeout: Timeout,
 	}
-	// enable HTTP2
+	// enable HTTP/2
 	err := http2.ConfigureTransport(tr)
 	if err != nil {
 		log.Printf("Unable to enable HTTP/2 \n%s", err)
@@ -57,37 +99,20 @@ func getHTTPClient(tlsConfig *tls.Config) http.Client {
 	return client
 }
 
-// Get configured TLS struct.
-func getTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
-	if cipher == 0 {
-		tlsConfig := &tls.Config{
-			RootCAs:                certPool,
-			CipherSuites:           Ciphers,
-			MinVersion:             tls.VersionSSL30,
-			SessionTicketsDisabled: false,
-		}
-		return tlsConfig
-	}
-	selCipher := []uint16{cipher}
+// GetTLSConfig returns a configured TLS struct.
+func GetTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 	tlsConfig := &tls.Config{
 		RootCAs:                certPool,
-		CipherSuites:           selCipher,
 		MinVersion:             tls.VersionSSL30,
 		SessionTicketsDisabled: false,
 	}
+	if cipher == 0 {
+		tlsConfig.CipherSuites = Ciphers
+		return tlsConfig
+	}
+	selCipher := []uint16{cipher}
+	tlsConfig.CipherSuites = selCipher
 	return tlsConfig
-}
-
-// GetConnClient gets a connection client containing a configured tls.Config and http.Client
-func GetConnClient(trustFile string, cipher uint16) ConnClient {
-	connClient := new(ConnClient)
-	// Get trust list
-	trustedCAs, _ := pki.GetTrustedCAs(trustFile)
-	// Get TLS configuration
-	connClient.TLSConfig = getTLSConfig(trustedCAs, cipher)
-	// Get http client
-	connClient.HTTPClient = getHTTPClient(connClient.TLSConfig)
-	return *connClient
 }
 
 // GetCipherName translates unint16 cipher to readable string.
@@ -147,44 +172,3 @@ func GetTLSName(rawVersion uint16) string {
 	}
 	return version
 }
-
-// Timeout hold the number of seconds for timeout settings.
-const Timeout = 10 * time.Second
-
-// Package variables
-var (
-	Ciphers = []uint16{
-		tls.TLS_RSA_WITH_RC4_128_SHA,
-		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	}
-	CipherMap = map[string]uint16{
-		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
-		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-	}
-)

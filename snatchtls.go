@@ -8,11 +8,20 @@ import (
 	"github.com/spazbite187/snatchtls/client"
 )
 
+// Version contains details about the current version. BuildTime contains the current time.
+// Commit contains the git commit hash. BuildNum contains a composite of the previous three.
+var (
+	Version   = " not defined "
+	BuildTime = " not defined "
+	Commit    = " not defined "
+	BuildNum  = BuildTime + Commit
+)
+
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n version %s\n", client.Version)
-	fmt.Printf("    build num:  %s\n", client.BuildNum)
+	fmt.Printf("Snatch TLS\n version %s\n", Version)
+	fmt.Printf("    build num:  %s\n", BuildNum)
 
 	// flag setup
 	var (
