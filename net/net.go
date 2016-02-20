@@ -14,7 +14,6 @@ import (
 
 // ConnClient contains TlsConfig and HttpClient used for TLS connections.
 type ConnClient struct {
-	TLSConfig  *tls.Config
 	HTTPClient http.Client
 }
 
@@ -38,7 +37,7 @@ func (connInfo ConnInfo) String() string {
 }
 
 // Get configured HTTP client struct.
-func getHTTPClient(tlsConfig *tls.Config) http.Client {
+func GetHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
 		DisableCompression:    false,
@@ -58,7 +57,7 @@ func getHTTPClient(tlsConfig *tls.Config) http.Client {
 }
 
 // Get configured TLS struct.
-func getTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
+func GetTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 	if cipher == 0 {
 		tlsConfig := &tls.Config{
 			RootCAs:                certPool,
@@ -76,18 +75,6 @@ func getTLSConfig(certPool *x509.CertPool, cipher uint16) *tls.Config {
 		SessionTicketsDisabled: false,
 	}
 	return tlsConfig
-}
-
-// GetConnClient gets a connection client containing a configured tls.Config and http.Client
-func GetConnClient(trustFile string, cipher uint16) ConnClient {
-	connClient := new(ConnClient)
-	// Get trust list
-	trustedCAs, _ := pki.GetTrustedCAs(trustFile)
-	// Get TLS configuration
-	connClient.TLSConfig = getTLSConfig(trustedCAs, cipher)
-	// Get http client
-	connClient.HTTPClient = getHTTPClient(connClient.TLSConfig)
-	return *connClient
 }
 
 // GetCipherName translates unint16 cipher to readable string.

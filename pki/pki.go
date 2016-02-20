@@ -2,7 +2,6 @@ package pki
 
 import (
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -88,19 +87,18 @@ func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 
 // GetTrustedCAs returns a certificate pool of trusted CA certificates or an error
 // if an error occurs adding CA certificates to the pool.
-func GetTrustedCAs(filename string) (*x509.CertPool, error) {
+func GetTrustedCAs(filename string) *x509.CertPool {
 	certPool := x509.NewCertPool()
 	// read in trust list
 	trustedCerts, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return nil
 	}
 	// load trust list
 	if !certPool.AppendCertsFromPEM(trustedCerts) {
-		err = errors.New("Failed to create trusted list of CAs")
-		return nil, err
+		return nil
 	}
-	return certPool, err
+	return certPool
 }
 
 // GetOCSPInfo returns OCSPInfo containing details from a DER encoded OCSP response or
