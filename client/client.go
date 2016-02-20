@@ -17,27 +17,37 @@ type Arguments struct {
 	Test           bool
 }
 
-// TestResults contains a map for the CipherResults.
-type TestResults struct {
-	CipherResults map[string]bool
+// CipherResults contains a map for the Ciphers.
+type CipherResults struct {
+	Ciphers map[string]bool
 }
 
-// TestResult contains a Pass bool to indicate pass/fail and the CipherName.
+// TestResult contains a Pass bool to indicate pass/fail, the CipherName and the connection
+// information.
 type TestResult struct {
 	Pass       bool
 	CipherName string
+	Info       net.ConnInfo
+}
+
+// Report contains pointers to the response data needed for displaying the connection
+// information to the user.
+type Report struct {
+	Args    *Arguments
+	Ciphers *CipherResults
+	Results *[]TestResult
 }
 
 // String method using the Stringer interface.
-func (testResults TestResults) String() string {
+func (results CipherResults) String() string {
 	s := fmt.Sprintf("Supported ciphers:\n")
-	for name, supported := range testResults.CipherResults {
+	for name, supported := range results.Ciphers {
 		if supported {
 			s = s + fmt.Sprintf("  %s\n", name)
 		}
 	}
 	s = s + fmt.Sprintf("Unsupported ciphers:\n")
-	for name, supported := range testResults.CipherResults {
+	for name, supported := range results.Ciphers {
 		if !supported {
 			s = s + fmt.Sprintf("  %s\n", name)
 		}
@@ -56,6 +66,7 @@ func DefaultConnection(args Arguments) {
 	if tlsConfig.RootCAs == nil {
 		args.TrustList = "(using system trust)"
 	}
+	// TODO: Create new function or method to get send the request and get a response back
 	// start response timer
 	respStartTime := time.Now()
 	// perform http GET request
@@ -118,23 +129,6 @@ func DefaultConnection(args Arguments) {
 		StapledOCSP:  stapledOcspResponse,
 	}
 
-	var testResults = TestResults{}
-	testResults.CipherResults = make(map[string]bool)
-	resultChan := make(chan TestResult)
-	for _, cipher := range net.CipherMap {
-		go func(cipher interface{}) {
-			cipherInt := cipher.(uint16)
-			resultChan <- testConnection(args, cipherInt)
-		}(cipher)
-	}
-
-	for i := 0; i < len(net.Ciphers); i++ {
-		result := <-resultChan
-		testResults.CipherResults[result.CipherName] = result.Pass
-	}
-
-	//fmt.Print(testResults)
-
 	// print out data
 	fmt.Printf("\nTrust list: %s\n", args.TrustList)
 	fmt.Printf("       URL: %s\n\n", args.URL)
@@ -152,8 +146,8 @@ func DefaultConnection(args Arguments) {
 func TestConnections(args Arguments) {
 	fmt.Println("\nTesting connection...")
 	fmt.Println()
-	var testResults = TestResults{}
-	testResults.CipherResults = make(map[string]bool)
+	var results = CipherResults{}
+	results.Ciphers = make(map[string]bool)
 	resultChan := make(chan TestResult)
 	for _, cipher := range net.CipherMap {
 		go func(cipher interface{}) {
@@ -164,10 +158,10 @@ func TestConnections(args Arguments) {
 
 	for i := 0; i < len(net.Ciphers); i++ {
 		result := <-resultChan
-		testResults.CipherResults[result.CipherName] = result.Pass
+		results.Ciphers[result.CipherName] = result.Pass
 	}
 
-	fmt.Print(testResults)
+	fmt.Print(results)
 }
 
 func testConnection(args Arguments, cipher uint16) TestResult {
@@ -178,7 +172,7 @@ func testConnection(args Arguments, cipher uint16) TestResult {
 	// get trust list
 	trustedCAs := pki.GetTrustedCAs(args.TrustList)
 	// get TLS configuration
-	tlsConfig := net.GetTLSConfig(trustedCAs, 0)
+	tlsConfig := net.GetTLSConfig(trustedCAs, cipher)
 	// get http client
 	client := net.GetHTTPClient(tlsConfig)
 	// perform http GET request
