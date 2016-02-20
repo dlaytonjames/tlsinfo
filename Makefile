@@ -6,7 +6,7 @@ OUTPUT=$(GOPATH)/bin/${BINARY}
 BUILDTIME=`date -u "+%Y%m%d%H%M%S"`
 COMMIT=`git log --oneline -n 1 --format="%h"`
 
-LDFLAGS=-ldflags "-X ${PKG}/client.Version=${VERSION} -X ${PKG}/client.BuildTime=${BUILDTIME} -X ${PKG}/client.Commit=${COMMIT}"
+LDFLAGS=-ldflags "-X main.Version=${VERSION} -X main.BuildTime=${BUILDTIME} -X main.Commit=${COMMIT}"
 
 default: some
 

@@ -1,5 +1,4 @@
 ## Snatch TLS (snatchtls)
-[![Build Status](https://travis-ci.com/spazbite187/snatchtls.svg?token=NMbRMJwwFjLPk9aX48wh&branch=master)](https://travis-ci.com/spazbite187/snatchtls)
 
 snatchtls is a command line tool for getting the connection details of a TLS end point. In test mode it will
 return a list of allowed TLS ciphers.

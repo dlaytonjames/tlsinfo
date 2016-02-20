@@ -10,15 +10,6 @@ import (
 	"github.com/spazbite187/snatchtls/pki"
 )
 
-// Version contains details about the current version. BuildTime contains the current time.
-// Commit contains the git commit hash. BuildNum contains a composite of the previous three.
-var (
-	Version   = " not defined "
-	BuildTime = " not defined "
-	Commit    = " not defined "
-	BuildNum  = BuildTime + Commit
-)
-
 // Arguments contains the TrustList, URL along with a bool Test, indicating
 // testing mode.
 type Arguments struct {
