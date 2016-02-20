@@ -53,11 +53,6 @@ var (
 	}
 )
 
-// ConnClient contains TlsConfig and HttpClient used for TLS connections.
-type ConnClient struct {
-	HTTPClient http.Client
-}
-
 // ConnInfo contains detailed information from a successful TLS connection.
 type ConnInfo struct {
 	ResponseTime                      time.Duration
