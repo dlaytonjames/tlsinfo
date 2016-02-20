@@ -20,8 +20,7 @@ var (
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n version %s\n", Version)
-	fmt.Printf("    build num:  %s\n", BuildNum)
+	fmt.Printf("Snatch TLS\n  version %s (build: %s)\n", Version, BuildNum)
 
 	// flag setup
 	var (
