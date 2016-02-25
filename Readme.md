@@ -28,16 +28,15 @@ Connection info:
 Server certificate:
   Issuer DN:
       CN=Google Internet Authority G2
-       O=[Google Inc]
-       C=[US]
+       O=Google Inc
+       C=US
   Subject DN:
       CN=www.google.com
-       O=[Google Inc]
-       C=[US]
+       O=Google Inc
+       C=US
   Subject Alternative Name (SAN):
-	  DNSNames: [www.google.com]
-	    IPAddr: []
-
+	  DNSName[1]: www.google.com
+	  
 Total app time:  179.279735ms
 ```
 To run with a specific URL, use the `-u` flag to specify the TLS endpoint.
@@ -71,15 +70,14 @@ Connection info:
 Server certificate:
   Issuer DN:
       CN=Google Internet Authority G2
-       O=[Google Inc]
-       C=[US]
+       O=Google Inc
+       C=US
   Subject DN:
       CN=www.google.com
-       O=[Google Inc]
-       C=[US]
+       O=Google Inc
+       C=US
   Subject Alternative Name (SAN):
-	  DNSNames: [www.google.com]
-	    IPAddr: []
+	  DNSName[1]: www.google.com
 
 Testing connection...
 

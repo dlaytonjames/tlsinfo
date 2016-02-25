@@ -8,6 +8,7 @@ import (
 	"net"
 	"time"
 
+	"encoding/hex"
 	"golang.org/x/crypto/ocsp"
 )
 
@@ -16,22 +17,43 @@ import (
 type CertInfo struct {
 	SubjectDN, IssuerDN DistinguishedName
 	SAN                 SubjectAltName
+	Serial              *big.Int
 }
 
 func (cert CertInfo) String() string {
-	s := fmt.Sprintf("  Issuer DN:\n")
-	s = s + fmt.Sprintf("      CN=%s\n", cert.IssuerDN.CN)
-	s = s + fmt.Sprintf("       O=%s\n", cert.IssuerDN.O)
-	s = s + fmt.Sprintf("       C=%s\n", cert.IssuerDN.C)
-	s = s + fmt.Sprintf("  Subject DN:\n")
-	s = s + fmt.Sprintf("      CN=%s\n", cert.SubjectDN.CN)
-	s = s + fmt.Sprintf("       O=%s\n", cert.SubjectDN.O)
-	s = s + fmt.Sprintf("       C=%s\n", cert.SubjectDN.C)
-	s = s + fmt.Sprintf("  Subject Alternative Name (SAN):\n")
-	s = s + fmt.Sprintf("	  DNSNames: %s\n", cert.SAN.DNSName)
-	s = s + fmt.Sprintf("	    IPAddr: %s\n", cert.SAN.IPAddr)
+	serialHex := hex.EncodeToString(cert.Serial.Bytes())
+	str := fmt.Sprintf("  Serial=%s\n", serialHex)
+	str = str + fmt.Sprintf("  Issuer DN:\n")
+	str = str + fmt.Sprintf("      CN=%s\n", cert.IssuerDN.CN)
+	for _, OU := range cert.IssuerDN.OU {
+		str = str + fmt.Sprintf("       OU=%s\n", OU)
+	}
+	for _, O := range cert.IssuerDN.O {
+		str = str + fmt.Sprintf("       O=%s\n", O)
+	}
+	for _, C := range cert.IssuerDN.C {
+		str = str + fmt.Sprintf("       C=%s\n", C)
+	}
+	str = str + fmt.Sprintf("  Subject DN:\n")
+	str = str + fmt.Sprintf("      CN=%s\n", cert.SubjectDN.CN)
+	for _, OU := range cert.SubjectDN.OU {
+		str = str + fmt.Sprintf("       OU=%s\n", OU)
+	}
+	for _, O := range cert.SubjectDN.O {
+		str = str + fmt.Sprintf("       O=%s\n", O)
+	}
+	for _, C := range cert.SubjectDN.C {
+		str = str + fmt.Sprintf("       C=%s\n", C)
+	}
+	str = str + fmt.Sprintf("  Subject Alternative Name (SAN):\n")
+	for i, dns := range cert.SAN.DNSName {
+		str = str + fmt.Sprintf("	  DNSName[%d]: %s\n", i+1, dns)
+	}
+	for i, ip := range cert.SAN.IPAddr {
+		str = str + fmt.Sprintf("	    IPAddr[%d]: %s\n", i+1, ip)
+	}
 
-	return s
+	return str
 }
 
 // OCSPInfo contains Status, Serial, ThisUpdate and NextUpdate representing a
@@ -44,7 +66,9 @@ type OCSPInfo struct {
 
 func (ocsp OCSPInfo) String() string {
 	s := fmt.Sprintf("  Status: %s\n", ocsp.Status)
-	s = s + fmt.Sprintf("  Serial: %d\n", ocsp.Serial)
+	// convert serial bigInt to hex
+	serialHex := hex.EncodeToString(ocsp.Serial.Bytes())
+	s = s + fmt.Sprintf("  Serial: %s\n", serialHex)
 	s = s + fmt.Sprintf("  This Update: %s\n", ocsp.ThisUpdate)
 	s = s + fmt.Sprintf("  Next Update: %s\n", ocsp.NextUpdate)
 
@@ -54,8 +78,8 @@ func (ocsp OCSPInfo) String() string {
 // DistinguishedName contains CN, O and C representing a subset of a certificate's
 // distinguished name.
 type DistinguishedName struct {
-	CN   string
-	O, C []string
+	CN       string
+	OU, O, C []string
 }
 
 // SubjectAltName contains DNSName and IPAddr representing the contents of a certificate's
@@ -69,6 +93,7 @@ type SubjectAltName struct {
 func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Issuer.CommonName,
+		OU: cert.Issuer.OrganizationalUnit,
 		O:  cert.Issuer.Organization,
 		C:  cert.Issuer.Country,
 	}
@@ -79,6 +104,7 @@ func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	dn := DistinguishedName{
 		CN: cert.Subject.CommonName,
+		OU: cert.Issuer.OrganizationalUnit,
 		O:  cert.Subject.Organization,
 		C:  cert.Subject.Country,
 	}

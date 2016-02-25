@@ -162,6 +162,7 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 		IssuerDN:  pki.GetIssuerDN(srvCert),
 		SubjectDN: pki.GetSubjectDN(srvCert),
 		SAN:       san,
+		Serial:    srvCert.SerialNumber,
 	}
 	connInfo = net.ConnInfo{
 		ResponseTime: respTime,
