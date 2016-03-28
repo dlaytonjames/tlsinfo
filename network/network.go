@@ -1,4 +1,4 @@
-package net
+package network
 
 import (
 	"crypto/tls"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/spazbite187/snatchtls/pki"
+	"github.com/spazbite187/keystone"
 	"golang.org/x/net/http2"
 )
 
@@ -57,9 +57,9 @@ var (
 type ConnInfo struct {
 	ResponseTime                      time.Duration
 	Status, Proto, TLSVersion, Cipher string
-	SrvCert                           pki.CertInfo
+	SrvCert                           keystone.CertDetails
 	StapledOCSP                       bool
-	OCSPResp                          pki.OCSPInfo
+	OCSPResp                          keystone.OCSPInfo
 }
 
 func (connInfo ConnInfo) String() string {
