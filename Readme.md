@@ -13,7 +13,7 @@ Running `snatchtls` without any arguments will use the system trust store for se
 ```console
 $ snatchtls
 Snatch TLS
-  version 1.0.0-DEV (build: 145598683042ec57e)
+  version 1.0.0-DEV (build: 1459141322f5a1f5d)
 
 Trust: (using system trust)
   URL: https://www.google.com
@@ -26,18 +26,13 @@ Connection info:
   TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   Stapled OCSP response: false
 Server certificate:
-  Issuer DN:
-      CN=Google Internet Authority G2
-       O=Google Inc
-       C=US
-  Subject DN:
-      CN=www.google.com
-       O=Google Inc
-       C=US
+  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Subject DN: CN=www.google.com, O=Google Inc, L=Mountain View, ST=California, C=US
+  Serial=7bcfcdf7eabc91c9
   Subject Alternative Name (SAN):
 	  DNSName[1]: www.google.com
-	  
-Total app time:  179.279735ms
+
+Total app time:  116.279735ms
 ```
 To run with a specific URL, use the `-u` flag to specify the TLS endpoint.
 ```console
@@ -55,7 +50,7 @@ TLS ciphers and report on the results.
 ```console
 $ snatchtls -test=true
 Snatch TLS
-  version 1.0.0-DEV (build: 145598683042ec57e)
+  version 1.0.0-DEV (build: 1459141322f5a1f5d)
 
 Trust: (using system trust)
   URL: https://www.google.com
@@ -68,14 +63,9 @@ Connection info:
   TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   Stapled OCSP response: false
 Server certificate:
-  Issuer DN:
-      CN=Google Internet Authority G2
-       O=Google Inc
-       C=US
-  Subject DN:
-      CN=www.google.com
-       O=Google Inc
-       C=US
+  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Subject DN: CN=www.google.com, O=Google Inc, L=Mountain View, ST=California, C=US
+  Serial=7bcfcdf7eabc91c9
   Subject Alternative Name (SAN):
 	  DNSName[1]: www.google.com
 
@@ -99,7 +89,7 @@ Unsupported ciphers:
   TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
   TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
 
-Total app time:  313.284246ms
+Total app time:  113.284246ms
 ```
 Note: Any of the flags can be combined and in any order.
 ## Help

@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/spazbite187/snatchtls/net"
-	"github.com/spazbite187/snatchtls/pki"
+	"github.com/spazbite187/keystone"
+	"github.com/spazbite187/snatchtls/network"
 )
 
 // Arguments contains the TrustList, URL along with a bool Test, indicating
@@ -27,7 +27,8 @@ type CipherResults struct {
 type TestResult struct {
 	Pass       bool
 	CipherName string
-	Info       net.ConnInfo
+	Info       network.ConnInfo
+	Paths      keystone.CertPaths
 }
 
 // Report contains pointers to the response data needed for displaying the connection
@@ -76,6 +77,7 @@ func DefaultConnection(args Arguments) {
 	fmt.Printf("  URL: %s\n\n", report.URL)
 	fmt.Println("Connection info:")
 	fmt.Print(result.Info)
+	fmt.Print(result.Paths)
 }
 
 // TestConnections performs TLS connections using TLS configurations with all available ciphers.
@@ -85,7 +87,7 @@ func TestConnections(args Arguments) {
 	var results = CipherResults{}
 	results.Ciphers = make(map[string]bool)
 	resultChan := make(chan TestResult)
-	for _, cipher := range net.CipherMap {
+	for _, cipher := range network.CipherMap {
 		go func(cipher interface{}) {
 			cipherInt := cipher.(uint16)
 			result, _ := testConnection(args, cipherInt)
@@ -93,7 +95,7 @@ func TestConnections(args Arguments) {
 		}(cipher)
 	}
 
-	for i := 0; i < len(net.Ciphers); i++ {
+	for i := 0; i < len(network.Ciphers); i++ {
 		result := <-resultChan
 		results.Ciphers[result.CipherName] = result.Pass
 	}
@@ -102,18 +104,20 @@ func TestConnections(args Arguments) {
 }
 
 func testConnection(args Arguments, cipher uint16) (TestResult, error) {
-	var connInfo net.ConnInfo
+	var connInfo network.ConnInfo
+	var certPaths keystone.CertPaths
 	testResults := TestResult{
 		Pass:       false,
-		CipherName: net.GetCipherName(cipher),
+		CipherName: network.GetCipherName(cipher),
 		Info:       connInfo,
+		Paths:      certPaths,
 	}
 	// get trust list
-	trustedCAs := pki.GetTrustedCAs(args.TrustList)
+	trustedCAs := keystone.GetTrustedCAs(args.TrustList)
 	// get TLS configuration
-	tlsConfig := net.GetTLSConfig(trustedCAs, cipher)
+	tlsConfig := network.GetTLSConfig(trustedCAs, cipher)
 	// get http client
-	client := net.GetHTTPClient(tlsConfig)
+	client := network.GetHTTPClient(tlsConfig)
 	// start response timer
 	respStartTime := time.Now()
 	// perform http GET request
@@ -137,34 +141,36 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 		return testResults, err
 	}
 	// get cipher name
-	cipherName := net.GetCipherName(tlsConnState.CipherSuite)
+	cipherName := network.GetCipherName(tlsConnState.CipherSuite)
 	// get tls version name
-	tlsVersion := net.GetTLSName(tlsConnState.Version)
+	tlsVersion := network.GetTLSName(tlsConnState.Version)
+	// get certs and chains
+	peerCerts := tlsConnState.PeerCertificates
+	srvCert := peerCerts[0]
+	testResults.Paths = tlsConnState.VerifiedChains
 	// Check for stapled OCSP response
 	var stapledOcspResponse bool
-	var ocspInfo pki.OCSPInfo
+	var ocspInfo keystone.OCSPInfo
 	rawOcspResp := tlsConnState.OCSPResponse
 	if len(rawOcspResp) > 0 {
 		stapledOcspResponse = true
-		ocspInfo, err = pki.GetOCSPInfo(rawOcspResp)
+		ocspInfo, err = keystone.GetOCSPInfo(rawOcspResp)
 		if err != nil {
 			return testResults, err
 		}
 	}
 	// created structs using data obtained from the response
-	peerCerts := tlsConnState.PeerCertificates
-	srvCert := peerCerts[0]
-	san := pki.SubjectAltName{
+	san := keystone.SubjectAltName{
 		DNSName: srvCert.DNSNames,
 		IPAddr:  srvCert.IPAddresses,
 	}
-	serverCert := pki.CertInfo{
-		IssuerDN:  pki.GetIssuerDN(srvCert),
-		SubjectDN: pki.GetSubjectDN(srvCert),
+	serverCert := keystone.CertDetails{
+		IssuerDN:  keystone.GetIssuerDN(srvCert),
+		SubjectDN: keystone.GetSubjectDN(srvCert),
 		SAN:       san,
 		Serial:    srvCert.SerialNumber,
 	}
-	connInfo = net.ConnInfo{
+	connInfo = network.ConnInfo{
 		ResponseTime: respTime,
 		Status:       resp.Status,
 		Proto:        resp.Proto,
