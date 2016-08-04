@@ -11,16 +11,13 @@ import (
 // Version contains details about the current version. BuildTime contains the current time.
 // Commit contains the git commit hash. BuildNum contains a composite of the previous three.
 var (
-	Version   = " not defined "
-	BuildTime = " not defined "
-	Commit    = " not defined "
-	BuildNum  = BuildTime + Commit
+	version = "1.0.0-DEV"
 )
 
 func main() {
 	// start app timer
 	appTime := time.Now()
-	fmt.Printf("Snatch TLS\n  version %s (build: %s)\n", Version, BuildNum)
+	fmt.Printf("Snatch TLS\n  version %s\n", version)
 
 	// flag setup
 	var (
