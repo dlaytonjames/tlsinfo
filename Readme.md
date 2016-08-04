@@ -50,7 +50,7 @@ TLS ciphers and report on the results.
 ```console
 $ snatchtls -test=true
 Snatch TLS
-  version 1.0.0-DEV (build: 1459141322f5a1f5d)
+  version 1.0.0-DEV
 
 Trust: (using system trust)
   URL: https://www.google.com
