@@ -96,7 +96,7 @@ Note: Any of the flags can be combined and in any order.
 ```console
 $ snatchtls -h
 Snatch TLS
-  version 1.0.0-DEV (build: 145598683042ec57e)
+  version 1.0.0-DEV
 Usage of snatchtls:
   -t string
     	the filename for the trusted CAs (PEM encoded)
