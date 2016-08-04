@@ -13,7 +13,7 @@ Running `snatchtls` without any arguments will use the system trust store for se
 ```console
 $ snatchtls
 Snatch TLS
-  version 1.0.0-DEV (build: 1459141322f5a1f5d)
+  version 1.0.0-DEV
 
 Trust: (using system trust)
   URL: https://www.google.com
