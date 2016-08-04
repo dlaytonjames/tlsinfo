@@ -2,6 +2,7 @@
 package keystone
 
 import (
+	"bytes"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -173,13 +174,15 @@ func (certPaths CertPaths) String() string {
 	return str
 }
 
-// GetSubjectDN returns the certificate's subject distinguished name.
+// GetSubjectDN is used to parse a x509.Certificate and return a DistinguishedName struct
+// containing the certificate's subject distinguished name.
 func GetSubjectDN(cert *x509.Certificate) DistinguishedName {
 	dn := getDN(cert.Subject)
 	return dn
 }
 
-// GetIssuerDN returns the certificate's issuer distinguished name.
+// GetIssuerDN is used to parse a x509.Certificate and return a DistinguishedName struct
+// containing the certificate's issuer distinguished name.
 func GetIssuerDN(cert *x509.Certificate) DistinguishedName {
 	dn := getDN(cert.Issuer)
 	return dn
@@ -236,18 +239,24 @@ func GetTrustedCAs(filename string) *x509.CertPool {
 	return certPool
 }
 
-func getCert(input []byte) (*x509.Certificate, error) {
+// GetCert returns a pointer to an x509 certificate and a nil error unless an error
+// is encountered.
+func GetCert(input []byte) (*x509.Certificate, error) {
 	var cert *x509.Certificate
 	if len(input) == 0 {
-		err := errors.New("Error parsing certificate")
+		err := errors.New("input empty")
 		return cert, err
 	}
 	certPEM, _ := pem.Decode(input)
+	if certPEM == nil {
+		err := errors.New("error parsing certificate")
+		return cert, err
+	}
 	cert, err := x509.ParseCertificate(certPEM.Bytes)
 	if err != nil {
 		return cert, err
 	}
-	return cert, err
+	return cert, nil
 }
 
 func getCertPool(certs []string) (*x509.CertPool, error) {
@@ -262,8 +271,9 @@ func getCertPool(certs []string) (*x509.CertPool, error) {
 	return certPool, nil
 }
 
-// GetCRL retrieves a CRL from specified URL and returns a slice of bytes representing
-// the CRL.
+// GetCRL is used to retrieve a CRL from specified URL returning the CRL as a slice of bytes.
+// The url is a string defining the CRL location. If an error is encountered a non-nil error
+// is returned.
 func GetCRL(url string) ([]byte, error) {
 	var crl []byte
 	req, err := http.NewRequest("GET", url, nil)
@@ -288,17 +298,18 @@ func GetCRL(url string) ([]byte, error) {
 	return crl, err
 }
 
-func checkRevoked(cert *x509.Certificate, crl *pkix.CertificateList) error {
+// CheckRevoked is used to determine if a certificate specified by serial number has been
+// revoked. Serial number of the target certificate and a pointer to a pkix.CertificateList
+// are required inputs. An error is return if the serial number is on the CRL.
+func CheckRevoked(serial *big.Int, crl *pkix.CertificateList) error {
 	var err error
-	// get target cert serial number in hex
-	targetSerial := fmt.Sprintf("%x", cert.SerialNumber)
+	serialBytes := serial.Bytes()
 	// check if target cert serial number is on the revokedCerts list
 	revokedCerts := crl.TBSCertList.RevokedCertificates
 	for _, revoked := range revokedCerts {
-		serial := fmt.Sprintf("%x", revoked.SerialNumber)
-		if serial == targetSerial {
-			subjectDN := GetSubjectDN(cert)
-			errDetails := fmt.Sprintf("\n * the certificate (serial: %s) is revoked - Subject DN: %s", targetSerial, subjectDN)
+		rvkSerialBytes := revoked.SerialNumber.Bytes()
+		if bytes.Equal(serialBytes, rvkSerialBytes) {
+			errDetails := fmt.Sprintf("certificate is revoked")
 			err = errors.New(errDetails)
 			return err
 		}
@@ -308,7 +319,6 @@ func checkRevoked(cert *x509.Certificate, crl *pkix.CertificateList) error {
 }
 
 func crlRevCheck(certChain []*x509.Certificate) (Warning, error) {
-	var err error
 	var warn Warning
 	var warnDetails string
 	var passedChecks int
@@ -352,7 +362,7 @@ func crlRevCheck(certChain []*x509.Certificate) (Warning, error) {
 				break
 			}
 			// check if the cert has been revoked
-			err = checkRevoked(target, revCertList)
+			err = CheckRevoked(target.SerialNumber, revCertList)
 			if err != nil {
 				warn = errors.New(warnDetails)
 				return warn, err
@@ -361,14 +371,18 @@ func crlRevCheck(certChain []*x509.Certificate) (Warning, error) {
 			passedChecks++
 		}
 	}
+
 	if warn != nil {
 		warn = errors.New(warnDetails)
+		return warn, nil
 	}
-	return warn, err
+
+	return nil, nil
 }
 
-// GetOCSPInfo returns OCSPInfo containing details from a DER encoded OCSP response or
-// an error if an error occurs parsing the OCSP response.
+// GetOCSPInfo is used to get OCSP response details from []byte containing the response. The
+// OCSP bytes input needs to be a DER encoded OCSP response. An OCSPInfo struct is returned
+// unless an error is encountered and then a non-nil error is returned.
 func GetOCSPInfo(ocspBytes []byte) (OCSPInfo, error) {
 	// TODO: Add issuer so the signature is validated
 	ocspInfo := new(OCSPInfo)
@@ -388,5 +402,6 @@ func GetOCSPInfo(ocspBytes []byte) (OCSPInfo, error) {
 	case ocsp.Unknown:
 		ocspInfo.Status = "Unknown"
 	}
+
 	return *ocspInfo, err
 }

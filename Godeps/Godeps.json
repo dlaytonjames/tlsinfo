@@ -1,23 +1,27 @@
 {
 	"ImportPath": "github.com/spazbite187/snatchtls",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v60",
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "github.com/spazbite187/keystone",
-			"Rev": "25a280c0b69461f7412620c2fa6c97c24c8a8851"
+			"Rev": "d42932eb4085ccf4dd1105b3a14dd37e23ba8167"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ocsp",
-			"Rev": "1f22c0103821b9390939b6776727195525381532"
+			"Rev": "611beeb3d5df450a45f4b67f9e25235f54beda72"
 		},
 		{
 			"ImportPath": "golang.org/x/net/http2",
-			"Rev": "08f168e593b5aab61849054b77981de812666697"
+			"Rev": "57bfaa875b96fb91b4766077f34470528d4b03e9"
 		},
 		{
 			"ImportPath": "golang.org/x/net/http2/hpack",
-			"Rev": "08f168e593b5aab61849054b77981de812666697"
+			"Rev": "57bfaa875b96fb91b4766077f34470528d4b03e9"
+		},
+		{
+			"ImportPath": "golang.org/x/net/lex/httplex",
+			"Rev": "57bfaa875b96fb91b4766077f34470528d4b03e9"
 		}
 	]
 }
