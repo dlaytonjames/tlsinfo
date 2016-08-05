@@ -26,9 +26,11 @@ Connection info:
   TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   Stapled OCSP response: false
 Server certificate:
-  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Serial=5a0561c8993222b4
   Subject DN: CN=www.google.com, O=Google Inc, L=Mountain View, ST=California, C=US
-  Serial=7bcfcdf7eabc91c9
+  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Note Before: 2016-07-28 11:40:00 +0000 UTC
+  Note After: 2016-10-20 11:40:00 +0000 UTC
   Subject Alternative Name (SAN):
 	  DNSName[1]: www.google.com
 
@@ -63,9 +65,11 @@ Connection info:
   TLS cipher: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
   Stapled OCSP response: false
 Server certificate:
-  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Serial=5a0561c8993222b4
   Subject DN: CN=www.google.com, O=Google Inc, L=Mountain View, ST=California, C=US
-  Serial=7bcfcdf7eabc91c9
+  Issuer DN: CN=Google Internet Authority G2, O=Google Inc, C=US
+  Note Before: 2016-07-28 11:40:00 +0000 UTC
+  Note After: 2016-10-20 11:40:00 +0000 UTC
   Subject Alternative Name (SAN):
 	  DNSName[1]: www.google.com
 
@@ -98,6 +102,8 @@ $ snatchtls -h
 Snatch TLS
   version 1.0.0-DEV
 Usage of snatchtls:
+  -s string
+    	the filename for saving the server certificate
   -t string
     	the filename for the trusted CAs (PEM encoded)
   -test
