@@ -8,8 +8,6 @@ import (
 	"github.com/spazbite187/snatchtls/client"
 )
 
-// Version contains details about the current version. BuildTime contains the current time.
-// Commit contains the git commit hash. BuildNum contains a composite of the previous three.
 var (
 	version = "1.0.0-DEV"
 )
@@ -23,6 +21,7 @@ func main() {
 	var (
 		trustList = flag.String("t", "", "the filename for the trusted CAs (PEM encoded)")
 		url       = flag.String("u", "https://www.google.com", "the url used for the connection")
+		save      = flag.String("s", "", "the filename for the server certificate")
 		test      = flag.Bool("test", false, "when enabled, all ciphers will be tested")
 	)
 	flag.Parse()
@@ -30,6 +29,7 @@ func main() {
 		TrustList: *trustList,
 		URL:       *url,
 		Test:      *test,
+		Cert:      *save,
 	}
 
 	// if test true, run with all configured ciphers, else run default connection
