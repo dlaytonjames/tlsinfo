@@ -8,20 +8,17 @@ import (
 	"github.com/spazbite187/snatchtls/client"
 )
 
-var (
-	version = "1.0.0-DEV"
-)
+var version = "1.0.0-DEV"
 
 func main() {
-	// start app timer
-	appTime := time.Now()
+	appTime := time.Now() // start app timer
 	fmt.Printf("Snatch TLS\n  version %s\n", version)
 
 	// flag setup
 	var (
 		trustList = flag.String("t", "", "the filename for the trusted CAs (PEM encoded)")
 		url       = flag.String("u", "https://www.google.com", "the url used for the connection")
-		save      = flag.String("s", "", "the filename for the server certificate")
+		save      = flag.String("s", "", "the filename for saving the server certificate")
 		test      = flag.Bool("test", false, "when enabled, all ciphers will be tested")
 	)
 	flag.Parse()
