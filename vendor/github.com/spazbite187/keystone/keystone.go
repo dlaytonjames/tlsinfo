@@ -54,12 +54,13 @@ type OCSPInfo struct {
 	ThisUpdate, NextUpdate time.Time
 }
 
-// CertDetails contains SubjectDN, IssuerDN and SAN representing a subset of
+// CertDetails contains SubjectDN, IssuerDN SAN, Serial, NotBefore and NotAfter representing a subset of
 // certificate information.
 type CertDetails struct {
 	SubjectDN, IssuerDN DistinguishedName
 	SAN                 SubjectAltName
 	Serial              *big.Int
+	NotBefore, NotAfter time.Time
 }
 
 var (
@@ -78,9 +79,11 @@ var (
 
 // String function for CertDetails.
 func (cert CertDetails) String() string {
-	str := fmt.Sprintf("  Issuer DN: %s\n", cert.IssuerDN)
+	str := fmt.Sprintf("  Serial=%x\n", cert.Serial)
 	str = str + fmt.Sprintf("  Subject DN: %s\n", cert.SubjectDN)
-	str = str + fmt.Sprintf("  Serial=%x\n", cert.Serial)
+	str = str + fmt.Sprintf("  Issuer DN: %s\n", cert.IssuerDN)
+	str = str + fmt.Sprintf("  Note Before: %s\n", cert.NotBefore)
+	str = str + fmt.Sprintf("  Note After: %s\n", cert.NotAfter)
 	str = str + fmt.Sprintf("  Subject Alternative Name (SAN):\n")
 	for i, dns := range cert.SAN.DNSName {
 		str = str + fmt.Sprintf("	  DNSName[%d]: %s\n", i+1, dns)

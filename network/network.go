@@ -13,7 +13,7 @@ import (
 )
 
 // Timeout hold the number of seconds for timeout settings.
-const Timeout = 10 * time.Second
+const Timeout = 30 * time.Second
 
 // Package variables
 var (
@@ -55,11 +55,12 @@ var (
 
 // ConnInfo contains detailed information from a successful TLS connection.
 type ConnInfo struct {
-	ResponseTime                      time.Duration
-	Status, Proto, TLSVersion, Cipher string
-	SrvCert                           keystone.CertDetails
-	StapledOCSP                       bool
-	OCSPResp                          keystone.OCSPInfo
+	ResponseTime       time.Duration
+	Status, Proto      string
+	TLSVersion, Cipher string
+	SrvCert            keystone.CertDetails
+	StapledOCSP        bool
+	OCSPResp           keystone.OCSPInfo
 }
 
 func (connInfo ConnInfo) String() string {
@@ -83,7 +84,7 @@ func (connInfo ConnInfo) String() string {
 func GetHTTPClient(tlsConfig *tls.Config) http.Client {
 	tr := &http.Transport{
 		TLSClientConfig:       tlsConfig,
-		DisableCompression:    false,
+		DisableCompression:    true,
 		TLSHandshakeTimeout:   Timeout,
 		ResponseHeaderTimeout: Timeout,
 	}

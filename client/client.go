@@ -1,6 +1,8 @@
 package client
 
 import (
+	"bufio"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"os"
@@ -13,8 +15,8 @@ import (
 // Arguments contains the TrustList, URL along with a bool Test, indicating
 // testing mode.
 type Arguments struct {
-	TrustList, URL string
-	Test           bool
+	TrustList, URL, Cert string
+	Test                 bool
 }
 
 // CipherResults contains a map for the Ciphers.
@@ -29,6 +31,7 @@ type TestResult struct {
 	CipherName string
 	Info       network.ConnInfo
 	Paths      keystone.CertPaths
+	Cert       *x509.Certificate
 }
 
 // Report contains pointers to the response data needed for displaying the connection
@@ -67,6 +70,21 @@ func DefaultConnection(args Arguments) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	if args.Cert != "" {
+		file, err := os.Create(args.Cert)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		w := bufio.NewWriter(file)
+		_, err = w.Write(result.Cert.Raw)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		w.Flush()
+	}
+
 	report := Report{
 		Trust:   args.TrustList,
 		URL:     args.URL,
@@ -112,15 +130,11 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 		Info:       connInfo,
 		Paths:      certPaths,
 	}
-	// get trust list
-	trustedCAs := keystone.GetTrustedCAs(args.TrustList)
-	// get TLS configuration
-	tlsConfig := network.GetTLSConfig(trustedCAs, cipher)
-	// get http client
-	client := network.GetHTTPClient(tlsConfig)
-	// start response timer
-	respStartTime := time.Now()
-	// perform http GET request
+	trustedCAs := keystone.GetTrustedCAs(args.TrustList)  // get trust list
+	tlsConfig := network.GetTLSConfig(trustedCAs, cipher) // get TLS configuration
+	client := network.GetHTTPClient(tlsConfig)            // get http client
+	respStartTime := time.Now()                           // start response timer
+
 	resp, err := client.Get(args.URL)
 	if err != nil {
 		return testResults, err
@@ -137,6 +151,7 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 	// check TLS connection
 	tlsConnState := resp.TLS
 	if tlsConnState == nil {
+		testResults.Cert = tlsConnState.PeerCertificates[0]
 		err = errors.New("TLS connection failed")
 		return testResults, err
 	}
@@ -145,8 +160,7 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 	// get tls version name
 	tlsVersion := network.GetTLSName(tlsConnState.Version)
 	// get certs and chains
-	peerCerts := tlsConnState.PeerCertificates
-	srvCert := peerCerts[0]
+	srvCert := tlsConnState.PeerCertificates[0]
 	testResults.Paths = tlsConnState.VerifiedChains
 	// Check for stapled OCSP response
 	var stapledOcspResponse bool
@@ -169,6 +183,8 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 		SubjectDN: keystone.GetSubjectDN(srvCert),
 		SAN:       san,
 		Serial:    srvCert.SerialNumber,
+		NotBefore: srvCert.NotBefore,
+		NotAfter:  srvCert.NotAfter,
 	}
 	connInfo = network.ConnInfo{
 		ResponseTime: respTime,
@@ -182,5 +198,12 @@ func testConnection(args Arguments, cipher uint16) (TestResult, error) {
 	}
 	testResults.Pass = true
 	testResults.Info = connInfo
+	testResults.Cert = srvCert
+
 	return testResults, nil
+}
+
+func saveCert(file string, cert x509.Certificate) error {
+
+	return nil
 }

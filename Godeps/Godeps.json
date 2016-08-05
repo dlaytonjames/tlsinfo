@@ -5,7 +5,7 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/spazbite187/keystone",
-			"Rev": "d42932eb4085ccf4dd1105b3a14dd37e23ba8167"
+			"Rev": "13ee4107ad42bf037beefa4bba69777af1414242"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ocsp",
