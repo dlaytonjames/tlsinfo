@@ -6,6 +6,7 @@ return a list of allowed TLS ciphers.
 ## Install
 ```console
 $ go get -u github.com/spazbite187/tlsinfo
+$ go install github.com/spazbite187/tlsinfo/...
 ```
 ## Usage
 Running `tlsinfo` without any arguments will use the system trust store for server certificate validation and
