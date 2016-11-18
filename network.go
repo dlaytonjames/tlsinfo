@@ -1,4 +1,4 @@
-package network
+package snatchtls
 
 import (
 	"crypto/tls"

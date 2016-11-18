@@ -1,10 +1,7 @@
-package main_test
+package snatchtls
 
-import (
-	"os"
-	"testing"
-)
+import "testing"
 
-func TestMain(m *testing.M) {
-	os.Exit(m.Run())
+func TestTestConnection(t *testing.T) {
+
 }
