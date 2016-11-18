@@ -1,18 +1,15 @@
 {
 	"ImportPath": "github.com/spazbite187/tlsinfo",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v74",
-	"Packages": [
-		"./..."
-	],
+	"GodepVersion": "v75",
 	"Deps": [
 		{
 			"ImportPath": "github.com/spazbite187/keystone",
-			"Rev": "13ee4107ad42bf037beefa4bba69777af1414242"
+			"Rev": "9e42bb5bdc9334ec0f0fcd0ea908c19e437b70f5"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ocsp",
-			"Rev": "611beeb3d5df450a45f4b67f9e25235f54beda72"
+			"Rev": "9477e0b78b9ac3d0b03822fd95422e2fe07627cd"
 		},
 		{
 			"ImportPath": "golang.org/x/net/http2",
