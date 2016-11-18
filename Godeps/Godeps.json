@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/spazbite187/snatchtls",
+	"ImportPath": "github.com/spazbite187/tlsinfo",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
 	"Packages": [

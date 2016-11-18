@@ -1,18 +1,18 @@
-## Snatch TLS (snatchtls)
+## TLS Info (tlsinfo)
 
-snatchtls is a command line tool for getting the connection details of a TLS end point. In test mode it will
+tlsinfo is a command line tool for getting the connection details of a TLS end point. In test mode it will
 return a list of allowed TLS ciphers.
 
 ## Install
 ```console
-$ go get -u github.com/spazbite187/snatchtls
+$ go get -u github.com/spazbite187/tlsinfo
 ```
 ## Usage
-Running `snatchtls` without any arguments will use the system trust store for server certificate validation and
+Running `tlsinfo` without any arguments will use the system trust store for server certificate validation and
 `https://www.google.com` as the URL.
 ```console
-$ snatchtls
-Snatch TLS
+$ tlsinfo
+TLS Info
   version 1.0.0-DEV
 
 Trust: (using system trust)
@@ -38,20 +38,20 @@ Total app time:  116.279735ms
 ```
 To run with a specific URL, use the `-u` flag to specify the TLS endpoint.
 ```console
-$ snatchtls -u https://www.apple.com
+$ tlsinfo -u https://www.apple.com
 ...
 ```
 To run with a custom trust store, use the `-t` flag to specify the file containing a list of PEM encoded
 CA certificates.
 ```console
-$ snatchtls -t trustList.pem
+$ tlsinfo -t trustList.pem
 ...
 ```
 To run in test mode, use the `-test=true` flag. Test mode will attempt to connect using all the configure
 TLS ciphers and report on the results.
 ```console
-$ snatchtls -test=true
-Snatch TLS
+$ tlsinfo -test=true
+TLS Info
   version 1.0.0-DEV
 
 Trust: (using system trust)
@@ -98,10 +98,10 @@ Total app time:  113.284246ms
 Note: Any of the flags can be combined and in any order.
 ## Help
 ```console
-$ snatchtls -h
-Snatch TLS
+$ tlsinfo -h
+TLS Info
   version 1.0.0-DEV
-Usage of snatchtls:
+Usage of tlsinfo:
   -s string
     	the filename for saving the server certificate
   -t string

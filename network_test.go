@@ -1,4 +1,4 @@
-package snatchtls
+package tlsinfo
 
 import (
 	"crypto/tls"

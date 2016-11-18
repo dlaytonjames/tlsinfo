@@ -1,5 +1,5 @@
-// Package snatchtls ...
-package snatchtls
+// Package tlsinfo ...
+package tlsinfo
 
 import (
 	"bufio"
