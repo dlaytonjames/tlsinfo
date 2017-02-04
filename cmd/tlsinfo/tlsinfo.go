@@ -9,7 +9,7 @@ import (
 	"github.com/spazbite187/tlsinfo"
 )
 
-var version = "1.0.0-DEV"
+var version = "1.0.0"
 
 func main() {
 	appTime := time.Now() // start app timer

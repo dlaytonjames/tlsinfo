@@ -14,7 +14,7 @@ Running `tlsinfo` without any arguments will use the system trust store for serv
 ```console
 $ tlsinfo
 TLS Info
-  version 1.0.0-DEV
+  version 1.0.0
 
 Trust: (using system trust)
   URL: https://www.google.com
@@ -58,7 +58,7 @@ TLS ciphers and report on the results.
 ```console
 $ tlsinfo -u https://www.curttech.net -test
 TLS Info
-  version 1.0.0-DEV
+  version 1.0.0
 
 Trust: (using system trust)
   URL: https://www.curttech.net
@@ -120,7 +120,7 @@ Note: Any of the flags can be combined and in any order.
 ```console
 $ tlsinfo -h
 TLS Info
-  version 1.0.0-DEV
+  version 1.0.0
 Usage of tlsinfo:
   -s string
     	the filename for saving the server certificate
