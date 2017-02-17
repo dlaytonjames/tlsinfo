@@ -4,7 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
+	"os"
 
 	"github.com/spazbite187/tlsinfo"
 )
@@ -12,20 +12,23 @@ import (
 var version = "1.0.0"
 
 func main() {
-	appTime := time.Now() // start app timer
 	fmt.Printf("TLS Info\n  version %s\n", version)
+	if len(os.Args) < 2 {
+		fmt.Printf("\nError - hostname required. Example: tlsinfo www.google.com\n\n")
+		os.Exit(1)
+	}
+	url := "https://" + os.Args[1]
 
 	// flag setup
 	var (
 		trustList = flag.String("t", "", "the filename for the trusted CAs (PEM encoded)")
-		url       = flag.String("u", "https://www.google.com", "the url used for the connection")
 		save      = flag.String("s", "", "the filename for saving the server certificate")
 		test      = flag.Bool("test", false, "when enabled, all ciphers will be tested")
 	)
 	flag.Parse()
 	args := tlsinfo.Arguments{
 		TrustList: *trustList,
-		URL:       *url,
+		URL:       url,
 		Test:      *test,
 		Cert:      *save,
 	}
@@ -37,6 +40,5 @@ func main() {
 	} else {
 		tlsinfo.DefaultConnection(args)
 	}
-	// end app timer and print out total time
-	fmt.Println("\nTotal app time: ", time.Since(appTime))
+	fmt.Println()
 }
